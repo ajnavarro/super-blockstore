@@ -17,7 +17,7 @@ type reader interface {
 }
 
 type Reader struct {
-	// TODO buffered reader. maybe separate the seker from the sequencial reader?
+	// TODO buffered reader. maybe separate the seeker from the sequencial reader?
 	rc        reader
 	gotHeader bool
 }

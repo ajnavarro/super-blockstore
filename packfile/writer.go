@@ -11,6 +11,8 @@ import (
 	"sync"
 
 	"github.com/klauspost/compress/s2"
+
+	ihash "github.com/ajnavarro/super-blockstorage/hash"
 )
 
 /*
@@ -78,7 +80,7 @@ func (pw *Writer) WriteBlock(key []byte, len int64, value io.Reader) (int64, err
 	//block_header:
 
 	//	key:[32]bytes
-	k := sha256.Sum256(key)
+	k := ihash.SumBytes(key)
 	n, err := pw.w.Write(k[:])
 	if err != nil {
 		return pOut, err

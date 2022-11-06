@@ -2,12 +2,12 @@ package packfile
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 
+	ihash "github.com/ajnavarro/super-blockstorage/hash"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,7 +38,7 @@ func TestWriteAndReadPackfile(t *testing.T) {
 	key, vr, err := pr.Next()
 	require.NoError(err)
 
-	k1 := sha256.Sum256([]byte("hello"))
+	k1 := ihash.SumBytes([]byte("hello"))
 	require.Equal(k1[:], key)
 	value, err := io.ReadAll(vr)
 	require.NoError(err)
@@ -50,14 +50,14 @@ func TestWriteAndReadPackfile(t *testing.T) {
 	key, vr, err = pr.Next()
 	require.NoError(err)
 
-	k3 := sha256.Sum256([]byte("bye"))
+	k3 := ihash.SumBytes([]byte("bye"))
 	require.Equal(k3[:], key)
 	value, err = io.ReadAll(vr)
 	require.NoError(err)
 	require.Equal([]byte("cruel world"), value)
 
 	k2, v2r, err := pr.ReadValueAt(pos2)
-	hk2 := sha256.Sum256([]byte("ttt"))
+	hk2 := ihash.SumBytes([]byte("ttt"))
 	require.NoError(err)
 	require.Equal(hk2[:], k2)
 
@@ -94,7 +94,7 @@ func TestWriteAndReadPackfileSnappy(t *testing.T) {
 	key, value, err := pr.Next()
 	require.NoError(err)
 
-	k1 := sha256.Sum256([]byte("hello"))
+	k1 := ihash.SumBytes([]byte("hello"))
 	require.Equal(k1[:], key)
 	require.Equal([]byte("world"), value)
 
@@ -104,12 +104,12 @@ func TestWriteAndReadPackfileSnappy(t *testing.T) {
 	key, value, err = pr.Next()
 	require.NoError(err)
 
-	k3 := sha256.Sum256([]byte("bye"))
+	k3 := ihash.SumBytes([]byte("bye"))
 	require.Equal(k3[:], key)
 	require.Equal([]byte("cruel world"), value)
 
 	k2, v2, err := pr.ReadValueAt(pos2)
-	hk2 := sha256.Sum256([]byte("ttt"))
+	hk2 := ihash.SumBytes([]byte("ttt"))
 	require.NoError(err)
 	require.Equal(hk2[:], k2)
 

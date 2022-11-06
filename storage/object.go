@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	ihash "github.com/ajnavarro/super-blockstorage/hash"
 )
 
 type ObjectStorage struct {
@@ -16,11 +18,18 @@ func NewObjectStorage(path string) *ObjectStorage {
 	return &ObjectStorage{path: path}
 }
 
-func (s *ObjectStorage) Add(key, value []byte) error {
-	return os.WriteFile(s.filePath(key), value, 0755)
+func (s *ObjectStorage) Add(key ihash.Hash, value []byte) error {
+	fp := s.filePath(key)
+	dir := path.Dir(fp)
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(fp, value, 0755)
 }
 
-func (s *ObjectStorage) Del(key []byte) error {
+func (s *ObjectStorage) Del(key ihash.Hash) error {
 	err := os.Remove(s.filePath(key))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -34,11 +43,11 @@ func (s *ObjectStorage) Flush() error {
 	return nil
 }
 
-func (s *ObjectStorage) Get(key []byte) ([]byte, error) {
+func (s *ObjectStorage) Get(key ihash.Hash) ([]byte, error) {
 	return os.ReadFile(s.filePath(key))
 }
 
-func (s *ObjectStorage) Has(key []byte) (bool, error) {
+func (s *ObjectStorage) Has(key ihash.Hash) (bool, error) {
 	_, err := os.Stat(s.filePath(key))
 	if errors.Is(err, os.ErrNotExist) {
 		return false, nil
@@ -63,8 +72,8 @@ func (s *ObjectStorage) GetAll() (*Iterator, error) {
 	return &Iterator{file: file}, err
 }
 
-func (s *ObjectStorage) filePath(key []byte) string {
-	name := hex.EncodeToString(key)
+func (s *ObjectStorage) filePath(key ihash.Hash) string {
+	name := hex.EncodeToString(key[:])
 	return path.Join(s.path, name[0:2], name)
 }
 

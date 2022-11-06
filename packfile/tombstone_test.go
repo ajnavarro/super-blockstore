@@ -1,6 +1,7 @@
 package packfile
 
 import (
+	"encoding/binary"
 	"os"
 	"testing"
 
@@ -47,7 +48,58 @@ func TestTombstone(t *testing.T) {
 	err = ts2.Clear()
 	require.NoError(err)
 
-	ok, err = ts2.Has([]byte("c"))
+	ok, err = ts2.Has([]byte("z"))
 	require.NoError(err)
 	require.False(ok)
+}
+
+func BenchmarkTombstoneWrite(b *testing.B) {
+	require := require.New(b)
+	f, err := os.CreateTemp("", "tombstone.bin")
+	require.NoError(err)
+
+	filename := f.Name()
+
+	ts, err := NewTombstonePath(filename)
+	require.NoError(err)
+	require.NotNil(ts)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint64(b, uint64(i))
+		require.NoError(ts.AddKey(b))
+	}
+
+	ts.Close()
+}
+
+func BenchmarkTombstoneRead(b *testing.B) {
+	require := require.New(b)
+	f, err := os.CreateTemp("", "tombstone.bin")
+	require.NoError(err)
+
+	filename := f.Name()
+
+	ts, err := NewTombstonePath(filename)
+	require.NoError(err)
+	require.NotNil(ts)
+
+	for i := 0; i < b.N; i++ {
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint64(b, uint64(i))
+		require.NoError(ts.AddKey(b))
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint64(b, uint64(i))
+		ok, err := ts.Has(b)
+		require.NoError(err)
+		require.True(ok)
+	}
+
+	ts.Close()
 }

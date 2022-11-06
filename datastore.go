@@ -6,11 +6,13 @@ import (
 	"os"
 	"path"
 
-	"github.com/ajnavarro/super-blockstorage/packfile"
-	"github.com/ajnavarro/super-blockstorage/storage"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/query"
+
+	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	"github.com/ajnavarro/super-blockstorage/packfile"
+	"github.com/ajnavarro/super-blockstorage/storage"
 )
 
 var _ datastore.Datastore = &Datastore{}
@@ -18,12 +20,7 @@ var _ datastore.Batching = &Datastore{}
 var _ datastore.CheckedDatastore = &Datastore{}
 var _ datastore.GCDatastore = &Datastore{}
 var _ datastore.PersistentDatastore = &Datastore{}
-var _ datastore.TxnDatastore = &Datastore{}
 
-// TODO key/position indexes
-// TODO packfiles will be created by key path for easier querying
-// TODO problem: delete and after that add the same block with no GC on the middle. Tombstone will have the hash, so when executing GC we will consider it as deleted.
-//   - Maybe add sharding instead of using simple packfiles
 type DatastoreConfig struct {
 	Folder string
 
@@ -32,15 +29,17 @@ type DatastoreConfig struct {
 
 const objectFolder = "objects"
 const packFolder = "packs"
+const processingFolder = "processing"
 
 const tombstoneName = "tombstone.bin"
 
 type Datastore struct {
-	ts *packfile.Tombstone
-	bc *lru.Cache
-	os *storage.ObjectStorage
-	pp *packfile.PackPack
-	// TODO pool reader?
+	ts    *packfile.Tombstone
+	cache *lru.Cache
+	os    *storage.ObjectStorage
+	pp    *PackPack
+
+	path string
 }
 
 func NewDatastore(cfg *DatastoreConfig) (*Datastore, error) {
@@ -55,17 +54,15 @@ func NewDatastore(cfg *DatastoreConfig) (*Datastore, error) {
 	}
 
 	os := storage.NewObjectStorage(path.Join(cfg.Folder, objectFolder))
-	pp := packfile.NewPackPack(path.Join(cfg.Folder, packFolder))
-	return &Datastore{
-		ts: ts,
-		bc: lcache,
-		os: os,
-		pp: pp,
-	}, nil
-}
+	pp := NewPackPack(cfg.Folder)
 
-func (ds *Datastore) NewTransaction(ctx context.Context, readOnly bool) (datastore.Txn, error) {
-	panic("not implemented") // TODO: Implement
+	return &Datastore{
+		path:  cfg.Folder,
+		ts:    ts,
+		cache: lcache,
+		os:    os,
+		pp:    pp,
+	}, nil
 }
 
 // DiskUsage returns the space used by a datastore, in bytes.
@@ -86,7 +83,9 @@ func (ds *Datastore) CollectGarbage(ctx context.Context) error {
 // Get retrieves the object `value` named by `key`.
 // Get will return ErrNotFound if the key is not mapped to a value.
 func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, err error) {
-	deleted, err := ds.ts.Has(key.Bytes())
+	k := ihash.SumBytes(key.Bytes())
+
+	deleted, err := ds.ts.HasHash(k)
 	if err != nil {
 		return nil, err
 	}
@@ -95,13 +94,13 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 		return nil, datastore.ErrNotFound
 	}
 
-	vali, ok := ds.bc.Get(key.Bytes())
+	vali, ok := ds.cache.Get(k)
 	if ok {
 		return vali.([]byte), nil
 	}
 
-	val, err := ds.os.Get(key.Bytes())
-	if err != nil {
+	val, err := ds.os.Get(k)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err
 	}
 
@@ -109,12 +108,16 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 		return val, nil
 	}
 
-	val, err = ds.pp.Get(key.Bytes())
+	val, err = ds.pp.GetHash(k)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, datastore.ErrNotFound
 	}
 
-	ds.bc.Add(key.Bytes(), val)
+	if err != nil {
+		return nil, err
+	}
+
+	ds.cache.Add(k, val)
 
 	return val, err
 }
@@ -124,11 +127,13 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 // a value, rather than retrieving the value itself. (e.g. HTTP HEAD).
 // The default implementation is found in `GetBackedHas`.
 func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, err error) {
-	if ds.bc.Contains(key.Bytes()) {
+	k := ihash.SumBytes(key.Bytes())
+
+	if ds.cache.Contains(k) {
 		return true, nil
 	}
 
-	deleted, err := ds.ts.Has(key.Bytes())
+	deleted, err := ds.ts.HasHash(k)
 	if err != nil {
 		return false, err
 	}
@@ -137,7 +142,7 @@ func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, e
 		return false, nil
 	}
 
-	contains, err := ds.os.Has(key.Bytes())
+	contains, err := ds.os.Has(k)
 	if err != nil {
 		return false, err
 	}
@@ -146,7 +151,7 @@ func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, e
 		return true, nil
 	}
 
-	return ds.pp.Has(key.Bytes())
+	return ds.pp.HasHash(k)
 }
 
 // GetSize returns the size of the `value` named by `key`.
@@ -184,15 +189,17 @@ func (ds *Datastore) Query(ctx context.Context, q query.Query) (query.Results, e
 // or risk getting incorrect values. It may also be useful to expose a more
 // type-safe interface to your application, and do the checking up-front.
 func (ds *Datastore) Put(ctx context.Context, key datastore.Key, value []byte) error {
-	// TODO avoid duplicated values???
-	return ds.os.Add(key.Bytes(), value)
+	k := ihash.SumBytes(key.Bytes())
+
+	return ds.os.Add(k, value)
 }
 
 // Delete removes the value for given `key`. If the key is not in the
 // datastore, this method returns no error.
 func (ds *Datastore) Delete(ctx context.Context, key datastore.Key) error {
-	ds.bc.Remove(key.Bytes())
-	return ds.ts.AddKey(key.Bytes())
+	k := ihash.SumBytes(key.Bytes())
+	ds.cache.Remove(k)
+	return ds.ts.AddHash(k)
 }
 
 // Sync guarantees that any Put or Delete calls under prefix that returned
@@ -211,7 +218,7 @@ func (ds *Datastore) Close() error {
 }
 
 func (ds *Datastore) Batch(ctx context.Context) (datastore.Batch, error) {
-	panic("not implemented") // TODO: Implement
+	return NewBatch(ds.path, ds.pp)
 }
 
 func (ds *Datastore) Check(ctx context.Context) error {

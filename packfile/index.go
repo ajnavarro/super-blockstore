@@ -2,18 +2,20 @@ package packfile
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"io"
+	"os"
 	"sort"
+
+	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	"github.com/ajnavarro/super-blockstorage/iio"
 )
 
 var _ io.WriterTo = &Index{}
 var _ io.ReaderFrom = &Index{}
 
 const fanoutSize = 256
-const keySize = 32
 
 var indexSig []byte = []byte{'S', 'P', 'I'}
 var indexVersion uint32 = 0
@@ -28,12 +30,44 @@ type Index struct {
 	//   TODO packfile checksum
 }
 
+func WriteIndexAtomically(i *Index, from, to string) error {
+	f, err := iio.OpenFile(from, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+
+	_, err = i.WriteTo(f)
+	if err != nil {
+		return err
+	}
+
+	if err := f.Close(); err != nil {
+		return err
+	}
+
+	return iio.Rename(from, to)
+}
+
 func NewIndex() *Index {
 	return &Index{}
 }
 
+func NewIndexFromFile(p string) (*Index, error) {
+	idx := NewIndex()
+	idxf, err := iio.OpenFile(p, os.O_RDONLY, 0755)
+	if err != nil {
+		return nil, err
+	}
+	_, err = idx.ReadFrom(idxf)
+	if err != nil {
+		return nil, err
+	}
+
+	return idx, nil
+}
+
 func (idx *Index) Add(key []byte, pos int64) {
-	k := sha256.Sum256(key)
+	k := ihash.SumBytes(key)
 	idx.entries[k[0]] = append(idx.entries[k[0]], &Entry{Key: k[:], Offset: pos})
 
 	idx.sorted = false
@@ -51,7 +85,7 @@ func (idx *Index) Sort() {
 	idx.sorted = true
 }
 
-func (idx *Index) GetRaw(keySha256 [32]byte) (*Entry, error) {
+func (idx *Index) GetRaw(keySha256 ihash.Hash) (*Entry, error) {
 	// TODO move to a function
 	if !idx.sorted {
 		// fullscan on bucket
@@ -89,17 +123,11 @@ func (idx *Index) GetRaw(keySha256 [32]byte) (*Entry, error) {
 }
 
 func (idx *Index) Get(key []byte) (*Entry, error) {
-	return idx.GetRaw(sha256.Sum256(key))
+	return idx.GetRaw(ihash.SumBytes(key))
 }
 
 func (i *Index) Count() (int64, error) {
 	return int64(i.count), nil
-}
-
-func (idx *Index) Join(idx2 *Index) error {
-	// TODO performant way of joining two indexes
-
-	return nil
 }
 
 func (i *Index) WriteTo(w io.Writer) (int64, error) {
@@ -210,7 +238,7 @@ func (idx *Index) ReadFrom(r io.Reader) (int64, error) {
 
 	// read keys and add entries to buckets
 	for i := 0; i < int(idx.count); i++ {
-		key := make([]byte, keySize)
+		key := make([]byte, ihash.KeySize)
 		n, err := io.ReadFull(r, key)
 		if err != nil {
 			return nOut, err
