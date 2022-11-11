@@ -16,6 +16,8 @@ func TestWriteAndReadObjects(t *testing.T) {
 
 	dir, err := os.MkdirTemp("", "object-storage")
 	require.NoError(err)
+	dirTemp, err := os.MkdirTemp("", "object-storage-temp")
+	require.NoError(err)
 
 	k1 := ihash.SumBytes([]byte("testKey1"))
 	v1 := []byte("testData1")
@@ -23,7 +25,7 @@ func TestWriteAndReadObjects(t *testing.T) {
 	k2 := ihash.SumBytes([]byte("testKey2"))
 	v2 := []byte("testData2")
 
-	os := NewObjectStorage(dir)
+	os := NewObjectStorage(dir, dirTemp)
 
 	err = os.Add(k1, v1)
 	require.NoError(err)

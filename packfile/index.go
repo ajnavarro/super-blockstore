@@ -30,8 +30,8 @@ type Index struct {
 	//   TODO packfile checksum
 }
 
-func WriteIndexAtomically(i *Index, from, to string) error {
-	f, err := iio.OpenFile(from, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0755)
+func WriteIndex(i *Index, path string) error {
+	f, err := iio.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0755)
 	if err != nil {
 		return err
 	}
@@ -41,11 +41,7 @@ func WriteIndexAtomically(i *Index, from, to string) error {
 		return err
 	}
 
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	return iio.Rename(from, to)
+	return f.Close()
 }
 
 func NewIndex() *Index {

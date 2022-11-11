@@ -8,31 +8,38 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 
 	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	"github.com/ajnavarro/super-blockstorage/iio"
 )
 
 type ObjectStorage struct {
-	path string
+	mu           sync.RWMutex // mu protects a deleteAll action from readers
+	path         string
+	temporalPath string
 }
 
-func NewObjectStorage(path string) *ObjectStorage {
-	return &ObjectStorage{path: path}
+func NewObjectStorage(path, temporalPath string) *ObjectStorage {
+	return &ObjectStorage{
+		path:         path,
+		temporalPath: temporalPath,
+	}
 }
 
 func (s *ObjectStorage) Add(key ihash.Hash, value []byte) error {
-	fp := s.filePath(key)
-	dir := path.Dir(fp)
-
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	ftp := filePath(s.temporalPath, key)
+	if err := iio.WriteFile(ftp, value, 0755); err != nil {
 		return err
 	}
 
-	return os.WriteFile(fp, value, 0755)
+	fp := filePath(s.path, key)
+
+	return iio.Rename(ftp, fp)
 }
 
 func (s *ObjectStorage) Del(key ihash.Hash) error {
-	err := os.Remove(s.filePath(key))
+	err := os.Remove(filePath(s.path, key))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
@@ -41,11 +48,17 @@ func (s *ObjectStorage) Del(key ihash.Hash) error {
 }
 
 func (s *ObjectStorage) Get(key ihash.Hash) ([]byte, error) {
-	return os.ReadFile(s.filePath(key))
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return os.ReadFile(filePath(s.path, key))
 }
 
 func (s *ObjectStorage) Has(key ihash.Hash) (bool, error) {
-	_, err := os.Stat(s.filePath(key))
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	_, err := os.Stat(filePath(s.path, key))
 	if errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err == nil {
@@ -56,16 +69,22 @@ func (s *ObjectStorage) Has(key ihash.Hash) (bool, error) {
 }
 
 func (s *ObjectStorage) DeleteAll() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	return os.RemoveAll(s.path)
 }
 
 func (s *ObjectStorage) GetAll() (*Iterator, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	return newIterator(s.path)
 }
 
-func (s *ObjectStorage) filePath(key ihash.Hash) string {
+func filePath(base string, key ihash.Hash) string {
 	name := hex.EncodeToString(key[:])
-	return path.Join(s.path, name[0:2], name)
+	return path.Join(base, name[0:2], name)
 }
 
 type Iterator struct {

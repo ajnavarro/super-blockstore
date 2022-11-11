@@ -114,6 +114,10 @@ func (pw *Writer) Hash() string {
 }
 
 func (pw *Writer) Close() error {
+	if err := pw.w.Flush(); err != nil {
+		return err
+	}
+
 	return pw.c.Close()
 }
 

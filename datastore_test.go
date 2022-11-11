@@ -44,6 +44,7 @@ func TestWriteBatch(t *testing.T) {
 	ds, err := NewDatastore(&DatastoreConfig{
 		Folder:                dir,
 		BlockCacheNumElements: 100,
+		PackMaxNumElements:    1000,
 	})
 	require.NoError(err)
 
