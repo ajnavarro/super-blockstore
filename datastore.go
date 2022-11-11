@@ -209,7 +209,7 @@ func (ds *Datastore) Delete(ctx context.Context, key datastore.Key) error {
 //
 // If the prefix fails to Sync this method returns an error.
 func (ds *Datastore) Sync(ctx context.Context, prefix datastore.Key) error {
-	return ds.os.Flush()
+	panic("not implemented") // TODO: Implement
 }
 
 func (ds *Datastore) Close() error {

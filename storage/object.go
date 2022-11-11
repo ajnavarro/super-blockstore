@@ -3,6 +3,8 @@ package storage
 import (
 	"encoding/hex"
 	"errors"
+	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -38,11 +40,6 @@ func (s *ObjectStorage) Del(key ihash.Hash) error {
 	return err
 }
 
-func (s *ObjectStorage) Flush() error {
-	// TODO implement and keep some objects into memory before flushing
-	return nil
-}
-
 func (s *ObjectStorage) Get(key ihash.Hash) ([]byte, error) {
 	return os.ReadFile(s.filePath(key))
 }
@@ -63,13 +60,7 @@ func (s *ObjectStorage) DeleteAll() error {
 }
 
 func (s *ObjectStorage) GetAll() (*Iterator, error) {
-	file, err := os.OpenFile(s.path, os.O_RDONLY, 0755)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &Iterator{file: file}, err
+	return newIterator(s.path)
 }
 
 func (s *ObjectStorage) filePath(key ihash.Hash) string {
@@ -78,27 +69,46 @@ func (s *ObjectStorage) filePath(key ihash.Hash) string {
 }
 
 type Iterator struct {
-	file   *os.File
-	dirPos int
-
-	reading []os.DirEntry
+	reading []string
 }
 
-func (i *Iterator) Next() ([]byte, []byte, error) {
+func newIterator(folder string) (*Iterator, error) {
+	var entries []string
+	err := filepath.WalkDir(folder, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		entries = append(entries, p)
+
+		return nil
+	})
+
+	return &Iterator{reading: entries}, err
+}
+
+func (i *Iterator) Next() (ihash.Hash, []byte, error) {
 	if len(i.reading) == 0 {
-		// TODO load reading
+		return ihash.Hash{}, nil, io.EOF
 	}
 
 	de, reading := i.reading[0], i.reading[1:]
 	i.reading = reading
 
-	fn := filepath.Base(de.Name())
-	key, err := hex.DecodeString(fn)
+	pn := path.Base(de)
+	key, err := hex.DecodeString(pn)
 	if err != nil {
-		return nil, nil, err
+		return ihash.Hash{}, nil, err
 	}
 
-	value, err := os.ReadFile(de.Name())
+	var keyOut ihash.Hash
+	copy(keyOut[:], key)
 
-	return key, value, err
+	value, err := os.ReadFile(de)
+
+	return keyOut, value, err
 }
