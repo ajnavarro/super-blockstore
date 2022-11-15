@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"testing"
 
@@ -77,13 +78,13 @@ func TestWriteAndReadPackfileSnappy(t *testing.T) {
 	err = pw.WriteHeader()
 	require.NoError(err)
 
-	pos1, err := pw.WriteBlock([]byte("hello"), bytes.NewReader([]byte("world")))
+	pos1, err := pw.WriteBlock([]byte("hello"), []byte("world"))
 	require.NoError(err)
 	require.Equal(int64(7), pos1)
-	pos2, err := pw.WriteBlock([]byte("ttt"), bytes.NewReader([]byte("somevalue")))
+	pos2, err := pw.WriteBlock([]byte("ttt"), []byte("somevalue"))
 	require.NoError(err)
 	require.Equal(int64(70), pos2)
-	pos3, err := pw.WriteBlock([]byte("bye"), bytes.NewBuffer([]byte("cruel world")))
+	pos3, err := pw.WriteBlock([]byte("bye"), []byte("cruel world"))
 	require.NoError(err)
 	require.Equal(int64(137), pos3)
 
@@ -117,41 +118,70 @@ func TestWriteAndReadPackfileSnappy(t *testing.T) {
 
 }
 
-// func TestCopyPackfileSnappy(t *testing.T) {
-// 	f, err := os.OpenFile("wikipedias2.pack", os.O_RDONLY, 0755)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func BenchmarkPackfileWrite(b *testing.B) {
+	b.Run("N=1", func(b *testing.B) {
+		packfileWriteElements(b, 1)
+	})
 
-// 	fcopy, err := os.OpenFile("wikipedia-copys2best.pack", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0755)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+	b.Run("N=10", func(b *testing.B) {
+		packfileWriteElements(b, 10)
+	})
 
-// 	pr := NewReaderSnappy(NewReader(f))
+	b.Run("N=1000", func(b *testing.B) {
+		packfileWriteElements(b, 1000)
+	})
+}
 
-// 	pw := NewWriterSnappy(NewWriter(fcopy))
+const blockLen = 1204 * 1024
 
-// 	err = pw.WriteHeader()
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func generateBlock() []byte {
+	var block [blockLen]byte
+	_, err := rand.Read(block[:])
+	if err != nil {
+		panic(err)
+	}
 
-// 	for {
-// 		k, v, err := pr.Next()
-// 		if errors.Is(err, io.EOF) {
-// 			break
-// 		}
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		// TODO allow raw copy
-// 		_, err = pw.WriteBlock(k, bytes.NewReader(v))
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	}
+	return block[:]
+}
 
-// 	pw.Close()
-// 	f.Close()
-// }
+func packfileWriteElements(b *testing.B, numBlocks int) {
+	b.Helper()
+
+	require := require.New(b)
+
+	tokens := make([][32]byte, numBlocks)
+	for i := 0; i < numBlocks; i++ {
+		var token [32]byte
+		_, err := rand.Read(token[:])
+		require.NoError(err)
+		tokens = append(tokens, token)
+	}
+
+	block := generateBlock()
+
+	b.ResetTimer()
+
+	b.SetBytes(int64((32 + blockLen) * numBlocks))
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+
+		f, err := os.CreateTemp("", "test.pack")
+		require.NoError(err)
+
+		pw := NewWriterSnappy(NewWriter(f))
+
+		err = pw.WriteHeader()
+		require.NoError(err)
+
+		b.StartTimer()
+
+		for i := 0; i < numBlocks; i++ {
+			_, err = pw.WriteBlock(tokens[i][:], block)
+			require.NoError(err)
+		}
+
+		err = pw.Close()
+		require.NoError(err)
+	}
+}

@@ -134,12 +134,15 @@ func NewWriterSnappy(pr *Writer) *WriterSnappy {
 	}
 }
 
-func (pw *WriterSnappy) WriteBlock(key []byte, value io.Reader) (int64, error) {
+func (pw *WriterSnappy) WriteBlock(key []byte, value []byte) (int64, error) {
 	buf := bufPool.Get().(*bytes.Buffer)
+	defer bufPool.Put(buf)
+
 	buf.Reset()
 	pw.zr.Reset(buf)
 
-	_, err := io.Copy(pw.zr, value)
+	_, err := pw.zr.Write(value)
+
 	if err != nil {
 		return 0, err
 	}
@@ -148,11 +151,9 @@ func (pw *WriterSnappy) WriteBlock(key []byte, value io.Reader) (int64, error) {
 		return 0, err
 	}
 
-	n, err := pw.Writer.WriteBlock(key, int64(buf.Len()), buf)
+	pos, err := pw.Writer.WriteBlock(key, int64(buf.Len()), buf)
 
-	bufPool.Put(buf)
-
-	return n, err
+	return pos, err
 }
 
 func (pw *WriterSnappy) Close() error {

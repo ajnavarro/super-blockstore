@@ -1,7 +1,6 @@
 package superblock
 
 import (
-	"bytes"
 	"context"
 	"errors"
 
@@ -34,7 +33,7 @@ func NewBatch(packProcessing *packfile.PackProcessing) *Batch {
 // or risk getting incorrect values. It may also be useful to expose a more
 // type-safe interface to your application, and do the checking up-front.
 func (tx *Batch) Put(ctx context.Context, key datastore.Key, value []byte) error {
-	return tx.packProc.WriteBlock(key.Bytes(), int64(len(value)), bytes.NewReader(value))
+	return tx.packProc.WriteBlock(key.Bytes(), value)
 }
 
 // Delete removes the value for given `key`. If the key is not in the

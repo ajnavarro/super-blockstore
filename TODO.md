@@ -14,4 +14,4 @@
 - Tombstone:
     - Avoid to have everything on memory
 
-NEXT STEP: add sizes to indexes to avoid to read the entire file
+TODO: compare with badger datastore with small blocks 

@@ -16,13 +16,13 @@ func TestWriteAndReadIndex(t *testing.T) {
 
 	idx := NewIndex()
 
-	idx.Add([]byte("hello"), 10)
-	idx.Add([]byte("bye"), 20)
-	idx.Add([]byte("world"), 30)
+	idx.Add([]byte("hello"), 10, 100)
+	idx.Add([]byte("bye"), 20, 200)
+	idx.Add([]byte("world"), 30, 300)
 
 	n, err := idx.WriteTo(f)
 	require.NoError(err)
-	require.Equal(int64(2175), n)
+	require.Equal(int64(2199), n)
 
 	_, err = f.Seek(0, io.SeekStart)
 	require.NoError(err)
@@ -30,9 +30,11 @@ func TestWriteAndReadIndex(t *testing.T) {
 
 	n, err = idx.ReadFrom(f)
 	require.NoError(err)
-	require.Equal(int64(2175), n)
+	require.Equal(int64(2199), n)
 
 	e, err := idx.Get([]byte("hello"))
 	require.NoError(err)
 	require.Equal(int64(10), e.Offset)
+	require.Equal(int64(100), e.Size)
+
 }

@@ -1,7 +1,6 @@
 package superblock
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -132,7 +131,7 @@ func (ds *Datastore) CollectGarbage(ctx context.Context) error {
 			continue
 		}
 
-		if err := packProc.WriteBlock(k[:], int64(len(v)), bytes.NewBuffer(v)); err != nil {
+		if err := packProc.WriteBlock(k[:], v); err != nil {
 			return err
 		}
 	}
@@ -175,7 +174,7 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 		return val, nil
 	}
 
-	val, err = ds.pp.GetHash(k)
+	val, err = ds.pp.Get(k)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, datastore.ErrNotFound
 	}
@@ -224,10 +223,11 @@ func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, e
 // GetSize returns the size of the `value` named by `key`.
 // In some contexts, it may be much cheaper to only get the size of the
 // value rather than retrieving the value itself.
-func (ds *Datastore) GetSize(ctx context.Context, key datastore.Key) (size int, err error) {
-	// TODO naive GetSize implementation. Improve.
-	val, err := ds.Get(ctx, key)
-	return len(val), err
+func (ds *Datastore) GetSize(ctx context.Context, key datastore.Key) (int, error) {
+	size, err := ds.pp.GetSize(ihash.SumBytes(key.Bytes()))
+
+	return int(size), err
+
 }
 
 // Query searches the datastore and returns a query result. This function

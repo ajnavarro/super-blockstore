@@ -2,7 +2,6 @@ package packfile
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
 	"math/rand"
 	"os"
@@ -28,7 +27,7 @@ type PackPack struct {
 
 type packAndIndex struct {
 	idx *Index
-	pr  *Reader
+	pr  *ReaderSnappy
 }
 
 func NewPackPack(path, tempPath string) (*PackPack, error) {
@@ -51,7 +50,27 @@ func NewPackPack(path, tempPath string) (*PackPack, error) {
 
 // TODO GetHashes
 
-func (pp *PackPack) GetHash(key ihash.Hash) ([]byte, error) {
+func (pp *PackPack) GetSize(key ihash.Hash) (int64, error) {
+	pp.mu.RLock()
+	defer pp.mu.RUnlock()
+
+	for _, ip := range pp.packs {
+		entry, err := ip.idx.GetRaw(key)
+		if err != nil {
+			return 0, err
+		}
+
+		if entry == nil {
+			continue
+		}
+
+		return entry.Size, nil
+	}
+
+	return 0, os.ErrNotExist
+}
+
+func (pp *PackPack) Get(key ihash.Hash) ([]byte, error) {
 	pp.mu.RLock()
 	defer pp.mu.RUnlock()
 
@@ -69,7 +88,7 @@ func (pp *PackPack) GetHash(key ihash.Hash) ([]byte, error) {
 			return nil, err
 		}
 
-		return io.ReadAll(v)
+		return v, nil
 	}
 
 	return nil, os.ErrNotExist
@@ -111,7 +130,7 @@ func (pp *PackPack) addPack(packHash string) error {
 
 	pp.packs[packHash] = &packAndIndex{
 		idx: idx,
-		pr:  NewReader(pf),
+		pr:  NewReaderSnappy(NewReader(pf)),
 	}
 
 	return nil
@@ -150,7 +169,7 @@ func (pp *PackPack) reloadPacks() error {
 
 			pp.packs[key] = &packAndIndex{
 				idx: idx,
-				pr:  NewReader(pr),
+				pr:  NewReaderSnappy(NewReader(pr)),
 			}
 		}
 
@@ -181,7 +200,7 @@ type PackProcessing struct {
 	elementsPacked     int
 
 	idx *Index
-	w   *Writer
+	w   *WriterSnappy
 	pp  *PackPack
 }
 
@@ -224,24 +243,24 @@ func (pp *PackProcessing) newPack() error {
 	pp.processingPackPath = pn
 
 	pp.idx = NewIndex()
-	pp.w = NewWriter(f)
+	pp.w = NewWriterSnappy(NewWriter(f))
 
 	return pp.w.WriteHeader()
 }
 
-func (pp *PackProcessing) WriteBlock(key []byte, len int64, value io.Reader) error {
+func (pp *PackProcessing) WriteBlock(key []byte, value []byte) error {
 	if pp.elementsPacked >= pp.maxObjectsPerPack {
 		if err := pp.newPack(); err != nil {
 			return err
 		}
 	}
 
-	pos, err := pp.w.WriteBlock(key, len, value)
+	pos, err := pp.w.WriteBlock(key, value)
 	if err != nil {
 		return err
 	}
 
-	pp.idx.Add(key, pos)
+	pp.idx.Add(key, pos, int64(len(value)))
 
 	pp.elementsPacked++
 
@@ -259,6 +278,7 @@ func (pp *PackProcessing) Commit() error {
 			return err
 		}
 
+		// TODO add packfiles in folder buckets too
 		// after writting the index, we can move the packfile safely
 		if err := iio.Rename(packProcessingPath(name, pp.tempPath), packPath(name, pp.packFolder)); err != nil {
 			return err

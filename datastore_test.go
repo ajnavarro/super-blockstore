@@ -70,6 +70,6 @@ func TestWriteBatch(t *testing.T) {
 
 	val, err := ds.Get(ctx, key)
 	require.NoError(err)
-	require.Equal(bval, val)
+	require.Equal(string(bval), string(val))
 
 }

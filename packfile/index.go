@@ -62,11 +62,14 @@ func NewIndexFromFile(p string) (*Index, error) {
 	return idx, nil
 }
 
-func (idx *Index) Add(key []byte, pos int64) {
+func (idx *Index) Add(key []byte, pos int64, size int64) {
 	k := ihash.SumBytes(key)
-	idx.entries[k[0]] = append(idx.entries[k[0]], &Entry{Key: k[:], Offset: pos})
+	idx.entries[k[0]] = append(idx.entries[k[0]],
+		&Entry{Key: k, Offset: pos, Size: size},
+	)
 
 	idx.sorted = false
+	idx.count++
 }
 
 func (idx *Index) Sort() {
@@ -86,7 +89,7 @@ func (idx *Index) GetRaw(keySha256 ihash.Hash) (*Entry, error) {
 	if !idx.sorted {
 		// fullscan on bucket
 		for _, e := range idx.entries[keySha256[0]] {
-			if bytes.Equal(e.Key, keySha256[:]) {
+			if bytes.Equal(e.Key[:], keySha256[:]) {
 				return e, nil
 			}
 		}
@@ -102,7 +105,7 @@ func (idx *Index) GetRaw(keySha256 ihash.Hash) (*Entry, error) {
 	ePos := sort.Search(
 		bucketLen,
 		func(i int) bool {
-			return bytes.Compare(keySha256[:], bucket[i].Key) <= 0
+			return bytes.Compare(keySha256[:], bucket[i].Key[:]) <= 0
 		},
 	)
 
@@ -111,7 +114,7 @@ func (idx *Index) GetRaw(keySha256 ihash.Hash) (*Entry, error) {
 	}
 
 	e := bucket[ePos]
-	if !bytes.Equal(e.Key, keySha256[:]) {
+	if !bytes.Equal(e.Key[:], keySha256[:]) {
 		return nil, nil
 	}
 
@@ -166,7 +169,7 @@ func (i *Index) WriteTo(w io.Writer) (int64, error) {
 	// hashes
 	for _, es := range i.entries {
 		for _, e := range es {
-			n, err := w.Write(e.Key)
+			n, err := w.Write(e.Key[:])
 			if err != nil {
 				return nOut, err
 			}
@@ -178,6 +181,16 @@ func (i *Index) WriteTo(w io.Writer) (int64, error) {
 	for _, es := range i.entries {
 		for _, e := range es {
 			if err := binary.Write(w, binary.BigEndian, e.Offset); err != nil {
+				return nOut, err
+			}
+			nOut += int64(8)
+		}
+	}
+
+	// sizes
+	for _, es := range i.entries {
+		for _, e := range es {
+			if err := binary.Write(w, binary.BigEndian, e.Size); err != nil {
 				return nOut, err
 			}
 			nOut += int64(8)
@@ -234,8 +247,8 @@ func (idx *Index) ReadFrom(r io.Reader) (int64, error) {
 
 	// read keys and add entries to buckets
 	for i := 0; i < int(idx.count); i++ {
-		key := make([]byte, ihash.KeySize)
-		n, err := io.ReadFull(r, key)
+		var key ihash.Hash
+		n, err := io.ReadFull(r, key[:])
 		if err != nil {
 			return nOut, err
 		}
@@ -258,6 +271,20 @@ func (idx *Index) ReadFrom(r io.Reader) (int64, error) {
 			nOut += int64(8)
 
 			idx.entries[i][j].Offset = offset
+		}
+	}
+
+	// read sizes
+	for i := 0; i < len(idx.entries); i++ {
+		for j := 0; j < len(idx.entries[i]); j++ {
+			var size int64
+			if err := binary.Read(r, binary.BigEndian, &size); err != nil {
+				return nOut, err
+			}
+
+			nOut += int64(8)
+
+			idx.entries[i][j].Size = size
 		}
 	}
 
@@ -287,9 +314,9 @@ func SortEntriesByHash(e Entries) {
 }
 
 type Entry struct {
-	Key    []byte
+	Key    ihash.Hash
 	Offset int64
-	// TODO size?
+	Size   int64
 	// TODO CRC
 	// TODO indexPos
 }
