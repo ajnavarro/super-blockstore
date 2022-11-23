@@ -1,6 +1,7 @@
 package packfile
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -59,7 +60,7 @@ func NewIndexFromFile(p string) (*Index, error) {
 		return nil, err
 	}
 
-	return idx, nil
+	return idx, idxf.Close()
 }
 
 func (idx *Index) Add(key []byte, pos int64, size int64) {
@@ -129,7 +130,9 @@ func (i *Index) Count() (int64, error) {
 	return int64(i.count), nil
 }
 
-func (i *Index) WriteTo(w io.Writer) (int64, error) {
+func (i *Index) WriteTo(writer io.Writer) (int64, error) {
+	w := bufio.NewWriterSize(writer, 4096*100)
+
 	var nOut int64
 
 	i.Sort()
@@ -200,7 +203,7 @@ func (i *Index) WriteTo(w io.Writer) (int64, error) {
 	// TODO CRCs
 	// TODO footer
 
-	return nOut, nil
+	return nOut, w.Flush()
 }
 func (idx *Index) ReadFrom(r io.Reader) (int64, error) {
 	var nOut int64

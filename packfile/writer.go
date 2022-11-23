@@ -49,7 +49,7 @@ type Writer struct {
 func NewWriter(w io.WriteCloser) *Writer {
 	h := sha256.New()
 	return &Writer{
-		w: bufio.NewWriter(io.MultiWriter(w, h)),
+		w: bufio.NewWriterSize(io.MultiWriter(w, h), 4096*100),
 		c: w,
 		h: h,
 	}
@@ -72,7 +72,8 @@ func (pw *Writer) WriteHeader() error {
 
 	pw.pos += 4
 
-	return pw.w.Flush()
+	// return pw.w.Flush()
+	return nil
 }
 
 func (pw *Writer) WriteBlock(key []byte, len int64, value io.Reader) (int64, error) {
@@ -106,7 +107,8 @@ func (pw *Writer) WriteBlock(key []byte, len int64, value io.Reader) (int64, err
 
 	pw.pos += nCopy
 
-	return pOut, pw.w.Flush()
+	//return pOut, pw.w.Flush()
+	return pOut, nil
 }
 
 func (pw *Writer) Hash() string {

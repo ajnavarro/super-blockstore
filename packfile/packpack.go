@@ -74,24 +74,84 @@ func (pp *PackPack) Get(key ihash.Hash) ([]byte, error) {
 	pp.mu.RLock()
 	defer pp.mu.RUnlock()
 
+	// TODO improve
+	result := make(chan []byte)
+	errChan := make(chan error)
+	var wg sync.WaitGroup
 	for _, ip := range pp.packs {
-		entry, err := ip.idx.GetRaw(key)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(ip *packAndIndex) {
+			defer wg.Done()
 
-		if entry == nil {
-			continue
-		}
-		_, v, err := ip.pr.ReadValueAt(entry.Offset)
-		if err != nil {
-			return nil, err
-		}
+			entry, err := ip.idx.GetRaw(key)
+			if err != nil {
+				errChan <- err
+				return
+			}
 
-		return v, nil
+			if entry == nil {
+				result <- nil
+				return
+			}
+			_, v, err := ip.pr.ReadValueAt(entry.Offset)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			result <- v
+		}(ip)
 	}
 
-	return nil, os.ErrNotExist
+	doneCh := make(chan bool)
+	go func() {
+		wg.Wait()
+		doneCh <- true
+		close(errChan)
+		close(result)
+		close(doneCh)
+	}()
+
+	var outErr error
+	var outVal []byte
+
+loop:
+	for {
+		select {
+		case err, ok := <-errChan:
+			if !ok {
+				break loop
+			}
+
+			outErr = err
+
+			break loop
+		case v, ok := <-result:
+			if !ok {
+				break loop
+			}
+
+			if v == nil {
+				continue loop
+			}
+
+			outVal = v
+
+			break loop
+		case <-doneCh:
+			break loop
+		}
+	}
+
+	if outErr != nil {
+		return nil, outErr
+	}
+
+	if outVal == nil {
+		return nil, os.ErrNotExist
+	}
+
+	return outVal, nil
 }
 
 func (pp *PackPack) HasHash(key ihash.Hash) (bool, error) {
