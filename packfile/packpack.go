@@ -26,7 +26,7 @@ type PackPack struct {
 }
 
 type packAndIndex struct {
-	idx *Index
+	idx *IndexReader
 	pr  *ReaderSnappy
 }
 
@@ -244,7 +244,7 @@ func (pp *PackPack) NewPackProcessing(numObjects int) (*PackProcessing, error) {
 		packFolder:        pp.path,
 		maxObjectsPerPack: numObjects,
 
-		idx: NewIndex(),
+		idx: NewIndexWriter(),
 		pp:  pp,
 	}
 	return packProc, packProc.newPack()
@@ -259,7 +259,7 @@ type PackProcessing struct {
 	processingPackPath string
 	elementsPacked     int
 
-	idx *Index
+	idx *IndexWriter
 	w   *WriterSnappy
 	pp  *PackPack
 }
@@ -302,7 +302,7 @@ func (pp *PackProcessing) newPack() error {
 
 	pp.processingPackPath = pn
 
-	pp.idx = NewIndex()
+	pp.idx = NewIndexWriter()
 	pp.w = NewWriterSnappy(NewWriter(f))
 
 	return pp.w.WriteHeader()
