@@ -6,12 +6,12 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20221122204154-936e011bb911
 	github.com/ipfs/go-ds-badger v0.3.0
 	github.com/ipfs/go-ds-badger2 v0.1.3
+	github.com/ipfs/go-ds-badger3 v0.0.2-0.20221125211009-a338b1a9c31e
 	github.com/ipfs/go-ds-flatfs v0.5.1
 	github.com/ipfs/go-ds-leveldb v0.5.0
 	github.com/ipfs/go-ds-pebble v0.0.2-0.20221124110437-8e8c642e2982
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/multierr v1.8.0
-	lukechampine.com/blake3 v1.1.7
 )
 
 require (
@@ -37,10 +37,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v1.12.1 // indirect
-	github.com/ipfs/go-ds-badger3 v0.0.2-0.20221125211009-a338b1a9c31e // indirect
 	github.com/ipfs/go-log v1.0.3 // indirect
 	github.com/ipfs/go-log/v2 v2.5.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
