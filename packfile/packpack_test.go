@@ -43,7 +43,7 @@ func TestWriteAndReadPackPack(t *testing.T) {
 
 	valNotFound, err := pp.Get(ihash.SumBytes([]byte("key22")))
 	require.Nil(valNotFound)
-	require.ErrorContains(err, "file does not exist")
+	require.ErrorContains(err, "entry not found")
 }
 
 var block = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}

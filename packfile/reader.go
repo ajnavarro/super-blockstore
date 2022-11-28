@@ -5,30 +5,30 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"io/ioutil"
 
 	"github.com/klauspost/compress/s2"
 )
 
-type reader interface {
-	io.Reader
-	io.Seeker
-	io.ReaderAt
-}
-
 type Reader struct {
 	// TODO buffered reader. maybe separate the seeker from the sequencial reader?
-	rc        reader
+	rc        io.ReadSeeker
+	c         io.Closer
 	gotHeader bool
 }
 
-func NewReader(rc reader) *Reader {
-	return &Reader{
-		rc: rc,
+func NewReader(rc io.ReadSeekCloser) (*Reader, error) {
+	s2rs, err := s2.NewReader(rc).ReadSeeker(true, nil)
+	if err != nil {
+		return nil, err
 	}
+
+	return &Reader{
+		rc: s2rs,
+		c:  rc,
+	}, nil
 }
 
-func (pr *Reader) Next() ([]byte, *io.SectionReader, error) {
+func (pr *Reader) Next() ([]byte, []byte, error) {
 	if !pr.gotHeader {
 		if err := pr.readHeader(); err != nil {
 			return nil, nil, err
@@ -40,18 +40,13 @@ func (pr *Reader) Next() ([]byte, *io.SectionReader, error) {
 		return nil, nil, err
 	}
 
-	pos, err := pr.rc.Seek(0, io.SeekCurrent)
+	v := make([]byte, bh.Blocksize)
+	_, err = io.ReadFull(pr.rc, v)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	sr := io.NewSectionReader(pr.rc, pos, int64(bh.Blocksize))
-	_, err = pr.rc.Seek(int64(bh.Blocksize), io.SeekCurrent)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return bh.Key, sr, err
+	return bh.Key, v, err
 }
 
 func (pr *Reader) Skip() error {
@@ -74,7 +69,7 @@ func (pr *Reader) Skip() error {
 	return nil
 }
 
-func (pr *Reader) ReadValueAt(off int64) ([]byte, *io.SectionReader, error) {
+func (pr *Reader) ReadValueAt(off int64) ([]byte, []byte, error) {
 	_, err := pr.rc.Seek(off, io.SeekStart)
 	if err != nil {
 		return nil, nil, err
@@ -85,19 +80,22 @@ func (pr *Reader) ReadValueAt(off int64) ([]byte, *io.SectionReader, error) {
 		return nil, nil, err
 	}
 
-	pos, err := pr.rc.Seek(0, io.SeekCurrent)
+	v := make([]byte, bh.Blocksize)
+	_, err = io.ReadFull(pr.rc, v)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	sr := io.NewSectionReader(pr.rc, pos, int64(bh.Blocksize))
+	return bh.Key, v, err
+}
 
-	return bh.Key, sr, err
+func (pr *Reader) Close() error {
+	return pr.c.Close()
 }
 
 type BlockHeader struct {
 	Key       []byte
-	Blocksize uint64
+	Blocksize uint32
 }
 
 func (pr *Reader) readBlockHeader() (*BlockHeader, error) {
@@ -110,7 +108,7 @@ func (pr *Reader) readBlockHeader() (*BlockHeader, error) {
 		return nil, err
 	}
 
-	var blocksize uint64
+	var blocksize uint32
 	if err := binary.Read(pr.rc, binary.BigEndian, &blocksize); err != nil {
 		return nil, err
 	}
@@ -149,48 +147,4 @@ func (pr *Reader) readHeader() error {
 	pr.gotHeader = true
 
 	return nil
-}
-
-type ReaderSnappy struct {
-	*Reader
-	zr *s2.Reader
-}
-
-func NewReaderSnappy(pr *Reader) *ReaderSnappy {
-	return &ReaderSnappy{
-		Reader: pr,
-		zr:     s2.NewReader(nil),
-	}
-}
-
-func (pr *ReaderSnappy) Next() ([]byte, []byte, error) {
-	k, sr, err := pr.Reader.Next()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pr.zr.Reset(sr)
-
-	val, err := ioutil.ReadAll(pr.zr)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return k, val, nil
-}
-
-func (pr *ReaderSnappy) ReadValueAt(off int64) ([]byte, []byte, error) {
-	k, sr, err := pr.Reader.ReadValueAt(off)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pr.zr.Reset(sr)
-
-	val, err := ioutil.ReadAll(pr.zr)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return k, val, nil
 }
