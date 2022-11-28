@@ -14,4 +14,6 @@
 - Tombstone:
     - Avoid to have everything on memory
 
-TODO: compare with badger datastore with small blocks 
+TODO: 
+- do a lookup on all the indexes at the same time
+- research about compressing the entire packfile using s3 instead of each element

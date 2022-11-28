@@ -43,7 +43,7 @@ func TestWriteAndReadPackPack(t *testing.T) {
 
 	valNotFound, err := pp.Get(ihash.SumBytes([]byte("key22")))
 	require.Nil(valNotFound)
-	require.ErrorContains(err, "file does not exist")
+	require.ErrorContains(err, "entry not found")
 }
 
 var block = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}
@@ -128,4 +128,76 @@ func lookup(b *testing.B, numElements int) {
 			require.NoError(err)
 		}
 	}
+}
+
+func BenchmarkWrite(b *testing.B) {
+	b.Run("N=100", func(b *testing.B) {
+		write(b, 100)
+	})
+
+	b.Run("N=1000", func(b *testing.B) {
+		write(b, 1000)
+	})
+
+	b.Run("N=10000", func(b *testing.B) {
+		write(b, 10000)
+	})
+
+	b.Run("N=100000", func(b *testing.B) {
+		write(b, 100000)
+	})
+
+	// b.Run("N=1000000", func(b *testing.B) {
+	// 	write(b, 1000000)
+	// })
+
+	// b.Run("N=10000000", func(b *testing.B) {
+	// 	write(b, 10000000)
+	// })
+
+	// b.Run("N=100000000", func(b *testing.B) {
+	// 	write(b, 100000000)
+	// })
+
+	// b.Run("N=1000000000", func(b *testing.B) {
+	// 	write(b, 1000000000)
+	// })
+}
+
+func write(b *testing.B, numElements int) {
+	b.Helper()
+
+	require := require.New(b)
+
+	dir, err := os.MkdirTemp("", "packpack")
+	require.NoError(err)
+
+	b.Cleanup(func() {
+		if err := os.RemoveAll(dir); err != nil {
+			b.Error("error cleaning up", err)
+		}
+	})
+
+	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"))
+	require.NoError(err)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		packProc, err := pp.NewPackProcessing(1e7)
+		require.NoError(err)
+
+		for i := 0; i < numElements; i++ {
+			var token [32]byte
+			_, err := rand.Read(token[:])
+			require.NoError(err)
+
+			err = packProc.WriteBlock(token[:], block)
+			require.NoError(err)
+		}
+
+		err = packProc.Commit()
+		require.NoError(err)
+	}
+
 }

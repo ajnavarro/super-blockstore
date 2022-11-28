@@ -12,6 +12,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/query"
+	"go.uber.org/multierr"
 
 	ihash "github.com/ajnavarro/super-blockstorage/hash"
 	"github.com/ajnavarro/super-blockstorage/packfile"
@@ -175,7 +176,7 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 	}
 
 	val, err = ds.pp.Get(k)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, packfile.ErrEntryNotFound) {
 		return nil, datastore.ErrNotFound
 	}
 
@@ -225,6 +226,9 @@ func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, e
 // value rather than retrieving the value itself.
 func (ds *Datastore) GetSize(ctx context.Context, key datastore.Key) (int, error) {
 	size, err := ds.pp.GetSize(ihash.SumBytes(key.Bytes()))
+	if err == packfile.ErrEntryNotFound {
+		return 0, datastore.ErrNotFound
+	}
 
 	return int(size), err
 
@@ -279,8 +283,12 @@ func (ds *Datastore) Sync(ctx context.Context, prefix datastore.Key) error {
 }
 
 func (ds *Datastore) Close() error {
-	// TODO add more closes
-	return ds.ts.Close()
+	ds.cache.Purge()
+
+	return multierr.Combine(
+		ds.pp.Close(),
+		ds.ts.Close(),
+	)
 }
 
 func (ds *Datastore) Batch(ctx context.Context) (datastore.Batch, error) {

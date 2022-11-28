@@ -1,6 +1,8 @@
 package packfile
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"math/rand"
@@ -12,8 +14,12 @@ import (
 	"time"
 
 	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	"github.com/ajnavarro/super-blockstorage/idx"
 	"github.com/ajnavarro/super-blockstorage/iio"
+	"go.uber.org/multierr"
 )
+
+var ErrEntryNotFound = errors.New("entry not found")
 
 // PackPack contains all the logic needed to get by key blocks from several packfiles.
 // It will use indexes if available
@@ -26,8 +32,8 @@ type PackPack struct {
 }
 
 type packAndIndex struct {
-	idx *Index
-	pr  *ReaderSnappy
+	idx *idx.IndexReader
+	pr  *Reader
 }
 
 func NewPackPack(path, tempPath string) (*PackPack, error) {
@@ -50,24 +56,24 @@ func NewPackPack(path, tempPath string) (*PackPack, error) {
 
 // TODO GetHashes
 
-func (pp *PackPack) GetSize(key ihash.Hash) (int64, error) {
+func (pp *PackPack) GetSize(key ihash.Hash) (uint32, error) {
 	pp.mu.RLock()
 	defer pp.mu.RUnlock()
 
 	for _, ip := range pp.packs {
-		entry, err := ip.idx.GetRaw(key)
+		size, err := ip.idx.GetSize(key)
+		if err == idx.ErrEntryNotFound {
+			continue
+		}
+
 		if err != nil {
 			return 0, err
 		}
 
-		if entry == nil {
-			continue
-		}
-
-		return entry.Size, nil
+		return size, nil
 	}
 
-	return 0, os.ErrNotExist
+	return 0, ErrEntryNotFound
 }
 
 func (pp *PackPack) Get(key ihash.Hash) ([]byte, error) {
@@ -75,23 +81,24 @@ func (pp *PackPack) Get(key ihash.Hash) ([]byte, error) {
 	defer pp.mu.RUnlock()
 
 	for _, ip := range pp.packs {
-		entry, err := ip.idx.GetRaw(key)
-		if err != nil {
-			return nil, err
-		}
-
-		if entry == nil {
+		offset, err := ip.idx.GetOffset(key)
+		if err == idx.ErrEntryNotFound {
 			continue
 		}
-		_, v, err := ip.pr.ReadValueAt(entry.Offset)
+
 		if err != nil {
 			return nil, err
 		}
 
-		return v, nil
+		_, sr, err := ip.pr.ReadValueAt(offset)
+		if err != nil {
+			return nil, err
+		}
+
+		return sr, nil
 	}
 
-	return nil, os.ErrNotExist
+	return nil, ErrEntryNotFound
 }
 
 func (pp *PackPack) HasHash(key ihash.Hash) (bool, error) {
@@ -99,12 +106,12 @@ func (pp *PackPack) HasHash(key ihash.Hash) (bool, error) {
 	defer pp.mu.RUnlock()
 
 	for _, ip := range pp.packs {
-		entry, err := ip.idx.GetRaw(key)
+		contains, err := ip.idx.Contains(key)
 		if err != nil {
 			return false, err
 		}
 
-		if entry == nil {
+		if !contains {
 			continue
 		}
 
@@ -115,7 +122,7 @@ func (pp *PackPack) HasHash(key ihash.Hash) (bool, error) {
 }
 
 func (pp *PackPack) addPack(packHash string) error {
-	idx, err := NewIndexFromFile(indexPath(packHash, pp.path))
+	idx, err := idx.NewIndexFromFile(indexPath(packHash, pp.path))
 	if err != nil {
 		return err
 	}
@@ -128,9 +135,14 @@ func (pp *PackPack) addPack(packHash string) error {
 	pp.mu.Lock()
 	defer pp.mu.Unlock()
 
+	pr, err := NewReader(pf)
+	if err != nil {
+		return err
+	}
+
 	pp.packs[packHash] = &packAndIndex{
 		idx: idx,
-		pr:  NewReaderSnappy(NewReader(pf)),
+		pr:  pr,
 	}
 
 	return nil
@@ -157,19 +169,24 @@ func (pp *PackPack) reloadPacks() error {
 				return nil
 			}
 
-			idx, err := NewIndexFromFile(path.Join(dir, fmt.Sprintf("%s.idx", key)))
+			idx, err := idx.NewIndexFromFile(path.Join(dir, fmt.Sprintf("%s.idx", key)))
 			if err != nil {
 				return err
 			}
 
-			pr, err := iio.OpenFile(p, os.O_RDONLY, 0755)
+			pf, err := iio.OpenFile(p, os.O_RDONLY, 0755)
+			if err != nil {
+				return err
+			}
+
+			pr, err := NewReader(pf)
 			if err != nil {
 				return err
 			}
 
 			pp.packs[key] = &packAndIndex{
 				idx: idx,
-				pr:  NewReaderSnappy(NewReader(pr)),
+				pr:  pr,
 			}
 		}
 
@@ -184,10 +201,24 @@ func (pp *PackPack) NewPackProcessing(numObjects int) (*PackProcessing, error) {
 		packFolder:        pp.path,
 		maxObjectsPerPack: numObjects,
 
-		idx: NewIndex(),
+		idx: idx.NewIndexWriter(),
 		pp:  pp,
 	}
 	return packProc, packProc.newPack()
+}
+
+func (pp *PackPack) Close() error {
+	pp.mu.Lock()
+	defer pp.mu.Unlock()
+	var errOut []error
+	for _, p := range pp.packs {
+		p.idx = nil
+		if err := p.pr.Close(); err != nil {
+			errOut = append(errOut, err)
+		}
+	}
+
+	return multierr.Combine(errOut...)
 }
 
 type PackProcessing struct {
@@ -199,8 +230,8 @@ type PackProcessing struct {
 	processingPackPath string
 	elementsPacked     int
 
-	idx *Index
-	w   *WriterSnappy
+	idx *idx.IndexWriter
+	w   *Writer
 	pp  *PackPack
 }
 
@@ -211,7 +242,7 @@ func (pp *PackProcessing) closePack() error {
 
 	name := pp.w.Hash()
 
-	if err := WriteIndex(pp.idx, indexProcessingPath(name, pp.tempPath)); err != nil {
+	if err := idx.WriteIndex(pp.idx, indexProcessingPath(name, pp.tempPath)); err != nil {
 		return err
 	}
 
@@ -242,8 +273,8 @@ func (pp *PackProcessing) newPack() error {
 
 	pp.processingPackPath = pn
 
-	pp.idx = NewIndex()
-	pp.w = NewWriterSnappy(NewWriter(f))
+	pp.idx = idx.NewIndexWriter()
+	pp.w = NewWriter(f)
 
 	return pp.w.WriteHeader()
 }
@@ -255,12 +286,15 @@ func (pp *PackProcessing) WriteBlock(key []byte, value []byte) error {
 		}
 	}
 
-	pos, err := pp.w.WriteBlock(key, value)
+	size := uint32(len(value))
+
+	pos, err := pp.w.WriteBlock(key, size, bytes.NewBuffer(value))
 	if err != nil {
 		return err
 	}
 
-	pp.idx.Add(key, pos, int64(len(value)))
+	// TODO add CRC32
+	pp.idx.Add(key, 0, uint64(pos), size)
 
 	pp.elementsPacked++
 

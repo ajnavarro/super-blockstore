@@ -1,7 +1,6 @@
 package packfile
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
@@ -10,9 +9,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/klauspost/compress/s2"
-
 	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	"github.com/klauspost/compress/s2"
 )
 
 /*
@@ -39,7 +37,7 @@ var packSig []byte = []byte{'S', 'P', 'B'}
 var packVersion uint32 = 0
 
 type Writer struct {
-	w   *bufio.Writer
+	w   io.Writer
 	c   io.Closer
 	pos int64
 
@@ -48,9 +46,11 @@ type Writer struct {
 
 func NewWriter(w io.WriteCloser) *Writer {
 	h := sha256.New()
+	// TODO maybe buffer?
+	s2w := s2.NewWriter(w, s2.WriterAddIndex())
 	return &Writer{
-		w: bufio.NewWriter(io.MultiWriter(w, h)),
-		c: w,
+		w: io.MultiWriter(s2w, h),
+		c: s2w,
 		h: h,
 	}
 }
@@ -72,10 +72,11 @@ func (pw *Writer) WriteHeader() error {
 
 	pw.pos += 4
 
-	return pw.w.Flush()
+	// return pw.w.Flush()
+	return nil
 }
 
-func (pw *Writer) WriteBlock(key []byte, len int64, value io.Reader) (int64, error) {
+func (pw *Writer) WriteBlock(key []byte, len uint32, value io.Reader) (int64, error) {
 	pOut := pw.pos
 	//block_header:
 
@@ -90,12 +91,12 @@ func (pw *Writer) WriteBlock(key []byte, len int64, value io.Reader) (int64, err
 
 	// TODO
 
-	//	blocksize:uint64
-	if err := binary.Write(pw.w, binary.BigEndian, uint64(len)); err != nil {
+	//	blocksize:uint32
+	if err := binary.Write(pw.w, binary.BigEndian, len); err != nil {
 		return pOut, err
 	}
 
-	pw.pos += 8
+	pw.pos += 4
 
 	// block:
 
@@ -106,7 +107,7 @@ func (pw *Writer) WriteBlock(key []byte, len int64, value io.Reader) (int64, err
 
 	pw.pos += nCopy
 
-	return pOut, pw.w.Flush()
+	return pOut, nil
 }
 
 func (pw *Writer) Hash() string {
@@ -114,52 +115,5 @@ func (pw *Writer) Hash() string {
 }
 
 func (pw *Writer) Close() error {
-	if err := pw.w.Flush(); err != nil {
-		return err
-	}
-
 	return pw.c.Close()
-}
-
-// TODO integrate with standard packfile Writer
-type WriterSnappy struct {
-	*Writer
-	zr *s2.Writer
-}
-
-func NewWriterSnappy(pr *Writer) *WriterSnappy {
-	return &WriterSnappy{
-		Writer: pr,
-		zr:     s2.NewWriter(nil),
-	}
-}
-
-func (pw *WriterSnappy) WriteBlock(key []byte, value []byte) (int64, error) {
-	buf := bufPool.Get().(*bytes.Buffer)
-	defer bufPool.Put(buf)
-
-	buf.Reset()
-	pw.zr.Reset(buf)
-
-	_, err := pw.zr.Write(value)
-
-	if err != nil {
-		return 0, err
-	}
-
-	if err := pw.zr.Flush(); err != nil {
-		return 0, err
-	}
-
-	pos, err := pw.Writer.WriteBlock(key, int64(buf.Len()), buf)
-
-	return pos, err
-}
-
-func (pw *WriterSnappy) Close() error {
-	if err := pw.zr.Close(); err != nil {
-		return err
-	}
-
-	return pw.Writer.Close()
 }
