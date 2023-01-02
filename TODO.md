@@ -17,3 +17,4 @@
 TODO: 
 - do a lookup on all the indexes at the same time
 - research about compressing the entire packfile using s3 instead of each element
+- add MIDX: https://git-scm.com/docs/pack-format#_multi_pack_index_midx_files_have_the_following_format

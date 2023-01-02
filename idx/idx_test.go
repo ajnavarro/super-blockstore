@@ -50,7 +50,6 @@ func TestWriteAndReadIndex_OLD(t *testing.T) {
 	require.Equal(int64(10), offset)
 	require.Equal(uint32(100), size)
 	require.Equal(uint32(1), crc)
-
 }
 
 var indexFixtures = []struct {
