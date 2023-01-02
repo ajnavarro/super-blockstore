@@ -2,10 +2,7 @@ package packfile
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
-	"encoding/hex"
-	"hash"
 	"io"
 	"sync"
 
@@ -40,18 +37,14 @@ type Writer struct {
 	w   io.Writer
 	c   io.Closer
 	pos int64
-
-	h hash.Hash
 }
 
 func NewWriter(w io.WriteCloser) *Writer {
-	h := sha256.New()
 	// TODO maybe buffer?
 	s2w := s2.NewWriter(w, s2.WriterAddIndex())
 	return &Writer{
-		w: io.MultiWriter(s2w, h),
+		w: s2w,
 		c: s2w,
-		h: h,
 	}
 }
 
@@ -108,10 +101,6 @@ func (pw *Writer) WriteBlock(key []byte, len uint32, value io.Reader) (int64, er
 	pw.pos += nCopy
 
 	return pOut, nil
-}
-
-func (pw *Writer) Hash() string {
-	return hex.EncodeToString(pw.h.Sum(nil))
 }
 
 func (pw *Writer) Close() error {

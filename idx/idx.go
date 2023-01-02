@@ -44,3 +44,22 @@ func SortEntriesByHash(e Entries) {
 		return bytes.Compare(e[i].Key[:], e[j].Key[:]) < 0
 	})
 }
+
+//////////////////////////////////////
+
+type Idx interface {
+	GetOffset(key ihash.Hash) (string, int64, error)
+	Contains(key ihash.Hash) (bool, error)
+	GetSize(key ihash.Hash) (uint32, error)
+	DeleteAll(packName string) error
+	NewTransaction(packName string) (Transaction, error)
+	Close() error
+
+	// TODO iterator
+}
+
+type Transaction interface {
+	Add(key ihash.Hash, crc32 uint32, pos int64, size uint32) error
+	Commit() error
+	Discard() error
+}

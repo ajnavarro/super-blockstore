@@ -6,7 +6,6 @@ import (
 	"path"
 	"testing"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,10 +15,10 @@ func TestWriteAndReadPackPack(t *testing.T) {
 	dir, err := os.MkdirTemp("", "packpack")
 	require.NoError(err)
 
-	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"))
+	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"), 1)
 	require.NoError(err)
 
-	packProc, err := pp.NewPackProcessing(1)
+	packProc, err := pp.NewPackProcessing()
 	require.NoError(err)
 
 	v1 := []byte("value1")
@@ -37,11 +36,11 @@ func TestWriteAndReadPackPack(t *testing.T) {
 	err = packProc.Commit()
 	require.NoError(err)
 
-	val2Out, err := pp.Get(ihash.SumBytes([]byte("key2")))
+	val2Out, err := pp.Get([]byte("key2"))
 	require.NoError(err)
 	require.Equal(v2, val2Out)
 
-	valNotFound, err := pp.Get(ihash.SumBytes([]byte("key22")))
+	valNotFound, err := pp.Get([]byte("key22"))
 	require.Nil(valNotFound)
 	require.ErrorContains(err, "entry not found")
 }
@@ -66,21 +65,21 @@ func BenchmarkLookup(b *testing.B) {
 		lookup(b, 100000)
 	})
 
-	// b.Run("N=1000000", func(b *testing.B) {
-	// 	lookup(b, 1000000)
-	// })
+	b.Run("N=1000000", func(b *testing.B) {
+		lookup(b, 1000000)
+	})
 
-	// b.Run("N=10000000", func(b *testing.B) {
-	// 	lookup(b, 10000000)
-	// })
+	b.Run("N=10000000", func(b *testing.B) {
+		lookup(b, 10000000)
+	})
 
-	// b.Run("N=100000000", func(b *testing.B) {
-	// 	lookup(b, 100000000)
-	// })
+	b.Run("N=100000000", func(b *testing.B) {
+		lookup(b, 100000000)
+	})
 
-	// b.Run("N=1000000000", func(b *testing.B) {
-	// 	lookup(b, 1000000000)
-	// })
+	b.Run("N=1000000000", func(b *testing.B) {
+		lookup(b, 1000000000)
+	})
 }
 
 func lookup(b *testing.B, numElements int) {
@@ -97,10 +96,10 @@ func lookup(b *testing.B, numElements int) {
 		}
 	})
 
-	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"))
+	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"), 10)
 	require.NoError(err)
 
-	packProc, err := pp.NewPackProcessing(1e6)
+	packProc, err := pp.NewPackProcessing()
 	require.NoError(err)
 
 	var samples [][32]byte
@@ -124,7 +123,7 @@ func lookup(b *testing.B, numElements int) {
 
 	for i := 0; i < b.N; i++ {
 		for _, token := range samples {
-			_, err := pp.Get(ihash.SumBytes(token[:]))
+			_, err := pp.Get(token[:])
 			require.NoError(err)
 		}
 	}
@@ -147,21 +146,21 @@ func BenchmarkWrite(b *testing.B) {
 		write(b, 100000)
 	})
 
-	// b.Run("N=1000000", func(b *testing.B) {
-	// 	write(b, 1000000)
-	// })
+	b.Run("N=1000000", func(b *testing.B) {
+		write(b, 1000000)
+	})
 
-	// b.Run("N=10000000", func(b *testing.B) {
-	// 	write(b, 10000000)
-	// })
+	b.Run("N=10000000", func(b *testing.B) {
+		write(b, 10000000)
+	})
 
-	// b.Run("N=100000000", func(b *testing.B) {
-	// 	write(b, 100000000)
-	// })
+	b.Run("N=100000000", func(b *testing.B) {
+		write(b, 100000000)
+	})
 
-	// b.Run("N=1000000000", func(b *testing.B) {
-	// 	write(b, 1000000000)
-	// })
+	b.Run("N=1000000000", func(b *testing.B) {
+		write(b, 1000000000)
+	})
 }
 
 func write(b *testing.B, numElements int) {
@@ -178,19 +177,23 @@ func write(b *testing.B, numElements int) {
 		}
 	})
 
-	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"))
+	pp, err := NewPackPack(path.Join(dir, "packs"), path.Join(dir, "temp"), 1)
 	require.NoError(err)
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		packProc, err := pp.NewPackProcessing(1e7)
+		packProc, err := pp.NewPackProcessing()
 		require.NoError(err)
 
 		for i := 0; i < numElements; i++ {
+			b.StopTimer()
+
 			var token [32]byte
 			_, err := rand.Read(token[:])
 			require.NoError(err)
+
+			b.StartTimer()
 
 			err = packProc.WriteBlock(token[:], block)
 			require.NoError(err)

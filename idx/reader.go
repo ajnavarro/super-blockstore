@@ -34,8 +34,6 @@ func NewIndexReader() *IndexReader {
 }
 
 type IndexReader struct {
-	count int64
-
 	fanoutTable   []uint32
 	fanoutMapping [256]int
 
@@ -53,8 +51,8 @@ func (idx *IndexReader) ReadFrom(r io.Reader) (int64, error) {
 	var nOut int64
 
 	flow := []func(io.Reader) (int, error){
-		idx.readSignature,
-		idx.readVersion,
+		readSignature,
+		readVersion,
 		idx.readFanout,
 		idx.readNames,
 		idx.readCRC,
@@ -72,35 +70,6 @@ func (idx *IndexReader) ReadFrom(r io.Reader) (int64, error) {
 	}
 
 	return nOut, nil
-}
-
-func (idx *IndexReader) readSignature(r io.Reader) (int, error) {
-	sig := make([]byte, len(indexSig))
-	n, err := io.ReadFull(r, sig)
-
-	if err != nil {
-		return n, err
-	}
-
-	if !bytes.Equal(indexSig, sig) {
-		return n, errors.New("not a valid idx file")
-	}
-
-	return n, nil
-}
-
-func (idx *IndexReader) readVersion(r io.Reader) (int, error) {
-	var version uint32
-
-	if err := binary.Read(r, binary.BigEndian, &version); err != nil {
-		return 0, err
-	}
-
-	if version != indexVersion {
-		return 4, errors.New("not a valid idx version")
-	}
-
-	return 4, nil
 }
 
 func (idx *IndexReader) readFanout(r io.Reader) (int, error) {
@@ -220,7 +189,7 @@ func (idx *IndexReader) readSizes(r io.Reader) (int, error) {
 }
 
 func (idx *IndexReader) Count() (int64, error) {
-	return int64(idx.count), nil
+	return int64(idx.fanoutTable[len(idx.fanoutTable)-1]), nil
 }
 
 func (idx *IndexReader) GetOffset(h ihash.Hash) (int64, error) {
@@ -336,4 +305,196 @@ type EntryIter interface {
 	Next() (*Entry, error)
 	// Close closes the iterator.
 	Close() error
+}
+
+// type IndexMMapReader struct {
+// 	r *bytes.Reader
+// 	b mmap.MMap
+// }
+
+// const (
+// 	signatureLen = 3
+// 	versionLen   = 4
+// 	fanoutLen    = 4 * fanoutSize
+// )
+
+// func NewIndexMMapReader(file string) (*IndexMMapReader, error) {
+// 	f, err := os.Open(file)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	b, err := mmap.Map(f, mmap.RDONLY, 0)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	r := bytes.NewReader(b)
+
+// 	_, err = readSignature(r)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	_, err = readVersion(r)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &IndexMMapReader{
+// 		r: r,
+// 		b: b,
+// 	}, nil
+// }
+
+// func (idx *IndexMMapReader) Count() (uint32, error) {
+// 	return idx.readFanout(fanoutSize - 1)
+// }
+
+// func (idx *IndexMMapReader) GetOffset(h ihash.Hash) (int64, error) {
+// 	return 0, nil
+// }
+
+// func (idx *IndexMMapReader) Contains(h ihash.Hash) (bool, error) {
+// 	f, err := idx.readFanout(binary.BigEndian.Uint32([]byte{h[0]}))
+// 	if err != nil {
+// 		return false, err
+// 	}
+
+// 	return false, nil
+// }
+
+// func (idx *IndexMMapReader) GetCRC32(h ihash.Hash) (uint32, error) {
+// 	return 0, nil
+// }
+
+// func (idx *IndexMMapReader) GetSize(h ihash.Hash) (uint32, error) {
+// 	return 0, nil
+// }
+
+// func (idx *IndexMMapReader) readFanout(k uint32) (uint32, error) {
+// 	fo := make([]byte, 4)
+// 	_, err := idx.r.ReadAt(fo, int64(signatureLen+versionLen+k))
+// 	if err != nil {
+// 		return 0, err
+// 	}
+
+// 	return binary.BigEndian.Uint32(fo), nil
+// }
+
+// func (idx *IndexMMapReader) readFanoutBuckets(k uint32) (buckets uint32, prevBuckets uint32, err error) {
+// 	if k == 0 {
+// 		bs, err := idx.readFanout(k)
+// 		if err != nil {
+// 			return 0, 0, err
+// 		}
+// 		buckets = bs
+// 	} else {
+// 		bs1, err := idx.readFanout(k)
+// 		if err != nil {
+// 			return 0, 0, err
+// 		}
+// 		bs2, err := idx.readFanout(k - 1)
+// 		if err != nil {
+// 			return 0, 0, err
+// 		}
+// 		buckets = bs1 - bs2
+// 		prevBuckets = bs2
+// 	}
+
+// 	return
+// }
+
+// func (idx *IndexMMapReader) readNames(k uint32) ([]byte, error) {
+// 	buckets, prevBuckets, err := idx.readFanoutBuckets(k)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if buckets == 0 {
+// 		return nil, nil
+// 	}
+
+// 	nameLen := int(buckets * ihash.KeySize)
+// 	bin := make([]byte, nameLen)
+// 	_, err = idx.r.ReadAt(bin, int64(signatureLen+versionLen+fanoutLen+(prevBuckets*ihash.KeySize)))
+
+// 	return bin, err
+// }
+
+// func (idx *IndexMMapReader) readCRC(k uint32) ([]byte, error) {
+// 	buckets, prevBuckets, err := idx.readFanoutBuckets(k)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	b := make([]byte, buckets*4)
+// 	_, err = idx.r.ReadAt(b, int64(signatureLen+versionLen+fanoutLen+(prevBuckets*4)))
+
+// 	return b, err
+// }
+
+// func (idx *IndexMMapReader) readOffset(k uint32) ([]byte, error) {
+// 	var o64cnt int
+
+// 	buckets, prevBuckets, err := idx.readFanoutBuckets(k)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+
+// 	if pos := idx.fanoutMapping[k]; pos != noMapping {
+// 		n, err := io.ReadFull(r, idx.offsets32[pos])
+// 		if err != nil {
+// 			return nOut, err
+// 		}
+
+// 		nOut += n
+
+// 		for p := 0; p < len(idx.offsets32[pos]); p += 4 {
+// 			if idx.offsets32[pos][p]&(byte(1)<<7) > 0 {
+// 				o64cnt++
+// 			}
+// 		}
+// 	}
+
+// 	if o64cnt > 0 {
+// 		idx.offsets64 = make([]byte, o64cnt*8)
+// 		n, err := io.ReadFull(r, idx.offsets64)
+// 		if err != nil {
+// 			return nOut, err
+// 		}
+
+// 		nOut += n
+// 	}
+
+// 	return nOut, nil
+// }
+
+func readSignature(r io.Reader) (int, error) {
+	sig := make([]byte, len(indexSig))
+	n, err := io.ReadFull(r, sig)
+
+	if err != nil {
+		return n, err
+	}
+
+	if !bytes.Equal(indexSig, sig) {
+		return n, errors.New("not a valid idx file")
+	}
+
+	return n, nil
+}
+
+func readVersion(r io.Reader) (int, error) {
+	var version uint32
+
+	if err := binary.Read(r, binary.BigEndian, &version); err != nil {
+		return 0, err
+	}
+
+	if version != indexVersion {
+		return 4, errors.New("not a valid idx version")
+	}
+
+	return 4, nil
 }

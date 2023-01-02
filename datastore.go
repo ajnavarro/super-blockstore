@@ -9,7 +9,7 @@ import (
 	"path"
 	"path/filepath"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/query"
 	"go.uber.org/multierr"
@@ -33,7 +33,7 @@ const tombstoneName = "tombstone.bin"
 
 type Datastore struct {
 	ts    *packfile.Tombstone
-	cache *lru.Cache
+	cache *lru.Cache[ihash.Hash, []byte]
 	os    *storage.ObjectStorage
 	pp    *packfile.PackPack
 
@@ -49,7 +49,7 @@ func NewDatastore(cfg *DatastoreConfig) (*Datastore, error) {
 		return nil, err
 	}
 
-	lcache, err := lru.New(cfg.BlockCacheNumElements)
+	lcache, err := lru.New[ihash.Hash, []byte](cfg.BlockCacheNumElements)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func NewDatastore(cfg *DatastoreConfig) (*Datastore, error) {
 	os := storage.NewObjectStorage(osf, processingFolder)
 
 	ppf := path.Join(cfg.Folder, packFolder)
-	pp, err := packfile.NewPackPack(ppf, processingFolder)
+	pp, err := packfile.NewPackPack(ppf, processingFolder, cfg.MaxOpenPacks)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (ds *Datastore) DiskUsage(ctx context.Context) (uint64, error) {
 }
 
 func (ds *Datastore) CollectGarbage(ctx context.Context) error {
-	packProc, err := ds.pp.NewPackProcessing(ds.elementsPerPack)
+	packProc, err := ds.pp.NewPackProcessing()
 	if err != nil {
 		return err
 	}
@@ -152,6 +152,11 @@ func (ds *Datastore) CollectGarbage(ctx context.Context) error {
 func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, err error) {
 	k := ihash.SumBytes(key.Bytes())
 
+	vali, ok := ds.cache.Get(k)
+	if ok {
+		return vali, nil
+	}
+
 	deleted, err := ds.ts.HasHash(k)
 	if err != nil {
 		return nil, err
@@ -159,11 +164,6 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 
 	if deleted {
 		return nil, datastore.ErrNotFound
-	}
-
-	vali, ok := ds.cache.Get(k)
-	if ok {
-		return vali.([]byte), nil
 	}
 
 	val, err := ds.os.Get(k)
@@ -175,7 +175,7 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 		return val, nil
 	}
 
-	val, err = ds.pp.Get(k)
+	val, err = ds.pp.Get(key.Bytes())
 	if errors.Is(err, packfile.ErrEntryNotFound) {
 		return nil, datastore.ErrNotFound
 	}
@@ -218,14 +218,14 @@ func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, e
 		return true, nil
 	}
 
-	return ds.pp.HasHash(k)
+	return ds.pp.Has(key.Bytes())
 }
 
 // GetSize returns the size of the `value` named by `key`.
 // In some contexts, it may be much cheaper to only get the size of the
 // value rather than retrieving the value itself.
 func (ds *Datastore) GetSize(ctx context.Context, key datastore.Key) (int, error) {
-	size, err := ds.pp.GetSize(ihash.SumBytes(key.Bytes()))
+	size, err := ds.pp.GetSize(key.Bytes())
 	if err == packfile.ErrEntryNotFound {
 		return 0, datastore.ErrNotFound
 	}
@@ -292,7 +292,7 @@ func (ds *Datastore) Close() error {
 }
 
 func (ds *Datastore) Batch(ctx context.Context) (datastore.Batch, error) {
-	pp, err := ds.pp.NewPackProcessing(ds.elementsPerPack)
+	pp, err := ds.pp.NewPackProcessing()
 	if err != nil {
 		return nil, err
 	}

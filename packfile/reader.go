@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"os"
 
+	"github.com/ajnavarro/super-blockstorage/iio"
 	"github.com/klauspost/compress/s2"
 )
 
@@ -14,6 +16,15 @@ type Reader struct {
 	rc        io.ReadSeeker
 	c         io.Closer
 	gotHeader bool
+}
+
+func NewPackFromFile(p string) (*Reader, error) {
+	pf, err := iio.OpenFile(p, os.O_RDONLY, 0755)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewReader(pf)
 }
 
 func NewReader(rc io.ReadSeekCloser) (*Reader, error) {

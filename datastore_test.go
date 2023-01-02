@@ -9,13 +9,9 @@ import (
 
 	"github.com/cockroachdb/pebble"
 	"github.com/ipfs/go-datastore"
-	badger "github.com/ipfs/go-ds-badger"
-	badger2 "github.com/ipfs/go-ds-badger2"
 	badger3 "github.com/ipfs/go-ds-badger3"
 	pebbleds "github.com/ipfs/go-ds-pebble"
 
-	flatfs "github.com/ipfs/go-ds-flatfs"
-	leveldb "github.com/ipfs/go-ds-leveldb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -93,24 +89,7 @@ var datastores = []struct {
 	Name        string
 	GetInstance func(path string) (datastoreInterface, error)
 }{
-	{
-		Name: "leveldb",
-		GetInstance: func(path string) (datastoreInterface, error) {
-			return leveldb.NewDatastore(path, nil)
-		},
-	},
-	{
-		Name: "pebble",
-		GetInstance: func(path string) (datastoreInterface, error) {
-			return pebbleds.NewDatastore(path, &pebble.Options{})
-		},
-	},
-	{
-		Name: "flatfs",
-		GetInstance: func(path string) (datastoreInterface, error) {
-			return flatfs.CreateOrOpen(path, flatfs.Suffix(2), true)
-		},
-	},
+
 	{
 		Name: "superBlockstore",
 		GetInstance: func(path string) (datastoreInterface, error) {
@@ -122,21 +101,48 @@ var datastores = []struct {
 		},
 	},
 	{
-		Name: "badger3",
+		Name: "pebble",
 		GetInstance: func(path string) (datastoreInterface, error) {
-			return badger3.NewDatastore(path, &badger3.DefaultOptions)
+			return pebbleds.NewDatastore(path, &pebble.Options{})
 		},
 	},
+	// {
+	// 	Name: "leveldb",
+	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 		return leveldb.NewDatastore(path, nil)
+	// 	},
+	// },
+
+	// {
+	// 	Name: "flatfs",
+	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 		return flatfs.CreateOrOpen(path, flatfs.Suffix(2), true)
+	// 	},
+	// },
+	// {
+	// 	Name: "badger3",
+	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 		return badger3.NewDatastore(path, &badger3.DefaultOptions)
+	// 	},
+	// },
+	// {
+	// 	Name: "badger2",
+	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 		return badger2.NewDatastore(path, &badger2.DefaultOptions)
+	// 	},
+	// },
+	// {
+	// 	Name: "badger1",
+	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 		return badger.NewDatastore(path, &badger.DefaultOptions)
+	// 	},
+	// },
 	{
-		Name: "badger2",
+		Name: "badger3-with-value-threshold-1KB",
 		GetInstance: func(path string) (datastoreInterface, error) {
-			return badger2.NewDatastore(path, &badger2.DefaultOptions)
-		},
-	},
-	{
-		Name: "badger1",
-		GetInstance: func(path string) (datastoreInterface, error) {
-			return badger.NewDatastore(path, &badger.DefaultOptions)
+			opts := &badger3.DefaultOptions
+			opts.ValueThreshold = 1024
+			return badger3.NewDatastore(path, opts)
 		},
 	},
 }
@@ -186,10 +192,10 @@ func skipIf(dsName string, numElements int) (bool, string) {
 
 func BenchmarkCompareDatastores(b *testing.B) {
 	for _, ds := range datastores {
-		b.Run(ds.Name, func(b *testing.B) {
+		b.Run(fmt.Sprint("DS=", ds.Name), func(b *testing.B) {
 			for _, value := range values {
 				b.Run(fmt.Sprint("P=", len(value)), func(b *testing.B) {
-					b.Run("Write", func(b *testing.B) {
+					b.Run("ACTION=WriteOnBatch", func(b *testing.B) {
 						require := require.New(b)
 
 						dir, err := os.MkdirTemp("", fmt.Sprintf("%s-bench-write", ds.Name))
@@ -226,6 +232,37 @@ func BenchmarkCompareDatastores(b *testing.B) {
 						require.NoError(err)
 					})
 
+					b.Run("ACTION=Write", func(b *testing.B) {
+						require := require.New(b)
+
+						dir, err := os.MkdirTemp("", fmt.Sprintf("%s-bench-write", ds.Name))
+						require.NoError(err)
+						b.Cleanup(func() {
+							os.RemoveAll(dir)
+						})
+
+						store, err := ds.GetInstance(dir)
+						require.NoError(err)
+						b.Cleanup(func() {
+							store.Close()
+						})
+
+						b.ResetTimer()
+
+						for i := 0; i < b.N; i++ {
+							b.StopTimer()
+							if skip, msg := skipIf(ds.Name, b.N); skip {
+								b.Skip(msg)
+							}
+
+							key := datastore.NewKey(randKey(32))
+							b.StartTimer()
+
+							err = store.Put(context.Background(), key, block)
+							require.NoError(err)
+						}
+					})
+
 					for _, nepb := range numElementsPerBatch {
 						b.Run(fmt.Sprint("N=", nepb), func(b *testing.B) {
 							if skip, msg := skipIf(ds.Name, nepb); skip {
@@ -234,9 +271,13 @@ func BenchmarkCompareDatastores(b *testing.B) {
 
 							dir, err := os.MkdirTemp("", fmt.Sprintf("%s-bench-read", ds.Name))
 							require.NoError(b, err)
+
 							b.Cleanup(func() {
 								os.RemoveAll(dir)
 							})
+
+							var eventlyDistributedSamples []datastore.Key
+							var consecutiveSamples []datastore.Key
 
 							store, err := ds.GetInstance(dir)
 							require.NoError(b, err)
@@ -244,10 +285,9 @@ func BenchmarkCompareDatastores(b *testing.B) {
 							batch, err := store.Batch(context.Background())
 							require.NoError(b, err)
 
-							var eventlyDistributedSamples []datastore.Key
-							var consecutiveSamples []datastore.Key
-
 							for i := 0; i < nepb; i++ {
+								b.StopTimer()
+
 								key := datastore.NewKey(randKey(32))
 
 								if i%(nepb/100) == 0 {
@@ -268,7 +308,26 @@ func BenchmarkCompareDatastores(b *testing.B) {
 							err = store.Close()
 							require.NoError(b, err)
 
-							b.Run("Read100EventlyDistributed", func(b *testing.B) {
+							b.Run("ACTION=DiskUsage", func(b *testing.B) {
+								store, err := ds.GetInstance(dir)
+								require.NoError(b, err)
+
+								b.ResetTimer()
+
+								for i := 0; i < b.N; i++ {
+									usage, err := datastore.DiskUsage(context.Background(), store)
+									require.NoError(b, err)
+
+									b.StopTimer()
+									b.ReportMetric(float64(usage), "disk")
+									b.StartTimer()
+								}
+
+								err = store.Close()
+								require.NoError(b, err)
+							})
+
+							b.Run("ACTION=Read100EventlyDistributed", func(b *testing.B) {
 								store, err := ds.GetInstance(dir)
 								require.NoError(b, err)
 								b.Cleanup(func() {
@@ -277,16 +336,21 @@ func BenchmarkCompareDatastores(b *testing.B) {
 
 								b.ResetTimer()
 
-								for i := 0; i < b.N; i++ {
-									for _, k := range eventlyDistributedSamples {
-										v, err := store.Get(context.Background(), k)
-										require.NoError(b, err)
-										require.Equal(b, block, v)
-									}
+								for _, n := range []int{1, 2, 3} {
+									b.Run(fmt.Sprintf("ITER=%d", n), func(b *testing.B) {
+										for i := 0; i < b.N; i++ {
+											for _, k := range eventlyDistributedSamples {
+												v, err := store.Get(context.Background(), k)
+												require.NoError(b, err)
+												require.Equal(b, block, v)
+											}
+										}
+									})
 								}
+
 							})
 
-							b.Run("Read100ConsecutiveKeys", func(b *testing.B) {
+							b.Run("ACTION=Read100ConsecutiveKeys", func(b *testing.B) {
 								store, err := ds.GetInstance(dir)
 								require.NoError(b, err)
 								b.Cleanup(func() {
@@ -295,16 +359,20 @@ func BenchmarkCompareDatastores(b *testing.B) {
 
 								b.ResetTimer()
 
-								for i := 0; i < b.N; i++ {
-									for _, k := range consecutiveSamples {
-										v, err := store.Get(context.Background(), k)
-										require.NoError(b, err)
-										require.Equal(b, block, v)
-									}
+								for _, n := range []int{1, 2, 3} {
+									b.Run(fmt.Sprintf("ITER=%d", n), func(b *testing.B) {
+										for i := 0; i < b.N; i++ {
+											for _, k := range consecutiveSamples {
+												v, err := store.Get(context.Background(), k)
+												require.NoError(b, err)
+												require.Equal(b, block, v)
+											}
+										}
+									})
 								}
 							})
 
-							b.Run("NonExistingKey", func(b *testing.B) {
+							b.Run("ACTION=NonExistingKey", func(b *testing.B) {
 								store, err := ds.GetInstance(dir)
 								require.NoError(b, err)
 								b.Cleanup(func() {
@@ -315,13 +383,15 @@ func BenchmarkCompareDatastores(b *testing.B) {
 
 								b.ResetTimer()
 
-								for i := 0; i < b.N; i++ {
-									_, err := store.Get(context.Background(), key)
-									require.ErrorIs(b, err, datastore.ErrNotFound)
+								for _, n := range []int{1, 2, 3} {
+									b.Run(fmt.Sprintf("ITER=%d", n), func(b *testing.B) {
+										for i := 0; i < b.N; i++ {
+											_, err := store.Get(context.Background(), key)
+											require.ErrorIs(b, err, datastore.ErrNotFound)
+										}
+									})
 								}
-
 							})
-
 						})
 					}
 				})

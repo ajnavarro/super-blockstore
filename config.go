@@ -5,6 +5,7 @@ type DatastoreConfig struct {
 
 	BlockCacheNumElements int
 	PackMaxNumElements    int
+	MaxOpenPacks          int
 }
 
 func (cfg *DatastoreConfig) FillDefaults() {
@@ -14,5 +15,9 @@ func (cfg *DatastoreConfig) FillDefaults() {
 
 	if cfg.PackMaxNumElements == 0 {
 		cfg.PackMaxNumElements = 1e6
+	}
+
+	if cfg.MaxOpenPacks == 0 {
+		cfg.MaxOpenPacks = 10
 	}
 }

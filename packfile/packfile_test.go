@@ -78,6 +78,18 @@ func BenchmarkPackfileWrite(b *testing.B) {
 	b.Run("N=1000", func(b *testing.B) {
 		packfileWriteElements(b, 1000)
 	})
+
+	b.Run("N=10000", func(b *testing.B) {
+		packfileWriteElements(b, 10000)
+	})
+
+	b.Run("N=100000", func(b *testing.B) {
+		packfileWriteElements(b, 100000)
+	})
+
+	b.Run("N=1000000", func(b *testing.B) {
+		packfileWriteElements(b, 1000000)
+	})
 }
 
 const blockLen = 1204 * 1024
