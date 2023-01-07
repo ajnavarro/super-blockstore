@@ -53,8 +53,8 @@ func (idx *IndexReader) ReadFrom(r io.Reader) (int64, error) {
 		idx.readFanout,
 		idx.readNames,
 		idx.readCRC,
-		idx.readOffsets,
 		idx.readSizes,
+		idx.readOffsets,
 		// TODO footer with checksum
 	}
 

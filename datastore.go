@@ -3,11 +3,10 @@ package superblock
 import (
 	"context"
 	"errors"
-	"io"
 	"io/fs"
-	"os"
 	"path"
 	"path/filepath"
+	"sync"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/ipfs/go-datastore"
@@ -16,7 +15,6 @@ import (
 
 	ihash "github.com/ajnavarro/super-blockstorage/hash"
 	"github.com/ajnavarro/super-blockstorage/packfile"
-	"github.com/ajnavarro/super-blockstorage/storage"
 )
 
 var _ datastore.Datastore = &Datastore{}
@@ -25,7 +23,6 @@ var _ datastore.CheckedDatastore = &Datastore{}
 var _ datastore.GCDatastore = &Datastore{}
 var _ datastore.PersistentDatastore = &Datastore{}
 
-const objectFolder = "objects"
 const packFolder = "packs"
 const processingFolder = "processing"
 
@@ -34,8 +31,10 @@ const tombstoneName = "tombstone.bin"
 type Datastore struct {
 	ts    *packfile.Tombstone
 	cache *lru.Cache[ihash.Hash, []byte]
-	os    *storage.ObjectStorage
 	pp    *packfile.PackPack
+
+	mu            sync.Mutex // protects singleObjects
+	singleObjects *packfile.PackProcessing
 
 	folder          string
 	elementsPerPack int
@@ -56,11 +55,13 @@ func NewDatastore(cfg *DatastoreConfig) (*Datastore, error) {
 
 	processingFolder := path.Join(cfg.Folder, processingFolder)
 
-	osf := path.Join(cfg.Folder, objectFolder)
-	os := storage.NewObjectStorage(osf, processingFolder)
-
 	ppf := path.Join(cfg.Folder, packFolder)
 	pp, err := packfile.NewPackPack(ppf, processingFolder, cfg.MaxOpenPacks)
+	if err != nil {
+		return nil, err
+	}
+
+	packProcessing, err := pp.NewPackProcessing()
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +71,9 @@ func NewDatastore(cfg *DatastoreConfig) (*Datastore, error) {
 	return &Datastore{
 		ts:    ts,
 		cache: lcache,
-		os:    os,
 		pp:    pp,
+
+		singleObjects: packProcessing,
 
 		folder:          cfg.Folder,
 		elementsPerPack: cfg.PackMaxNumElements,
@@ -103,46 +105,16 @@ func (ds *Datastore) DiskUsage(ctx context.Context) (uint64, error) {
 }
 
 func (ds *Datastore) CollectGarbage(ctx context.Context) error {
-	packProc, err := ds.pp.NewPackProcessing()
-	if err != nil {
-		return err
-	}
-
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
 	// first, we pack objects from objectStorage
-	objectIter, err := ds.os.GetAll()
-	if err != nil {
-		return err
-	}
-
-	for {
-		k, v, err := objectIter.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		deleted, err := ds.ts.HasHash(k)
-		if err != nil {
-			return err
-		}
-
-		if deleted {
-			continue
-		}
-
-		if err := packProc.WriteBlock(k[:], v); err != nil {
-			return err
-		}
-	}
-
-	if err := packProc.Commit(); err != nil {
+	if err := ds.singleObjects.Commit(); err != nil {
 		return err
 	}
 
 	// TODO repack previous packfiles
 	// TODO implement a heavy GC, to read using the indexes and remove possible duplicated blocks on packfiles
+	// TODO create MIDXs
 
 	return nil
 }
@@ -166,16 +138,7 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 		return nil, datastore.ErrNotFound
 	}
 
-	val, err := ds.os.Get(k)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return nil, err
-	}
-
-	if val != nil {
-		return val, nil
-	}
-
-	val, err = ds.pp.Get(key.Bytes())
+	val, err := ds.pp.Get(key.Bytes())
 	if errors.Is(err, packfile.ErrEntryNotFound) {
 		return nil, datastore.ErrNotFound
 	}
@@ -207,15 +170,6 @@ func (ds *Datastore) Has(ctx context.Context, key datastore.Key) (exists bool, e
 
 	if deleted {
 		return false, nil
-	}
-
-	contains, err := ds.os.Has(k)
-	if err != nil {
-		return false, err
-	}
-
-	if contains {
-		return true, nil
 	}
 
 	return ds.pp.Has(key.Bytes())
@@ -259,9 +213,9 @@ func (ds *Datastore) Query(ctx context.Context, q query.Query) (query.Results, e
 // or risk getting incorrect values. It may also be useful to expose a more
 // type-safe interface to your application, and do the checking up-front.
 func (ds *Datastore) Put(ctx context.Context, key datastore.Key, value []byte) error {
-	k := ihash.SumBytes(key.Bytes())
-
-	return ds.os.Add(k, value)
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	return ds.singleObjects.WriteBlock(key.Bytes(), value)
 }
 
 // Delete removes the value for given `key`. If the key is not in the
@@ -279,7 +233,10 @@ func (ds *Datastore) Delete(ctx context.Context, key datastore.Key) error {
 //
 // If the prefix fails to Sync this method returns an error.
 func (ds *Datastore) Sync(ctx context.Context, prefix datastore.Key) error {
-	panic("not implemented") // TODO: Implement
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+
+	return ds.singleObjects.Commit()
 }
 
 func (ds *Datastore) Close() error {

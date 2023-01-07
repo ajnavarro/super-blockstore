@@ -73,8 +73,8 @@ func (idx *IndexWriter) WriteTo(writer io.Writer) (int64, error) {
 		idx.writeFanout,
 		idx.writeNames,
 		idx.writeCRC,
-		idx.writeOffsets,
 		idx.writeSizes,
+		idx.writeOffsets,
 		// TODO footer with checksum
 	}
 
