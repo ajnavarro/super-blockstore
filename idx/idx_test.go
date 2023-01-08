@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
 	"github.com/stretchr/testify/require"
 )
 

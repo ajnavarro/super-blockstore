@@ -7,8 +7,8 @@ import (
 	"math"
 	"os"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
-	"github.com/ajnavarro/super-blockstorage/iio"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
+	"github.com/ajnavarro/super-blockstore/iio"
 )
 
 var _ io.WriterTo = &IndexWriter{}

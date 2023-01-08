@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sort"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
 )
 
 // Index format:

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 

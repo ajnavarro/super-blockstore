@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
 )
 
 // TODO add LRU cache

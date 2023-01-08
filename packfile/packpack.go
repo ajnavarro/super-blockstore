@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
-	"github.com/ajnavarro/super-blockstorage/idx"
-	"github.com/ajnavarro/super-blockstorage/iio"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
+	"github.com/ajnavarro/super-blockstore/idx"
+	"github.com/ajnavarro/super-blockstore/iio"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
 )

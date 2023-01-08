@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ajnavarro/super-blockstorage/iio"
+	"github.com/ajnavarro/super-blockstore/iio"
 	"github.com/klauspost/compress/s2"
 )
 

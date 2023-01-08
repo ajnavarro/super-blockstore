@@ -6,7 +6,7 @@ import (
 
 	"github.com/ipfs/go-datastore"
 
-	"github.com/ajnavarro/super-blockstorage/packfile"
+	"github.com/ajnavarro/super-blockstore/packfile"
 )
 
 var ErrNotSupportedOnBatches = errors.New("this method is not supported on batches")

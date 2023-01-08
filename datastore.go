@@ -13,8 +13,8 @@ import (
 	"github.com/ipfs/go-datastore/query"
 	"go.uber.org/multierr"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
-	"github.com/ajnavarro/super-blockstorage/packfile"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
+	"github.com/ajnavarro/super-blockstore/packfile"
 )
 
 var _ datastore.Datastore = &Datastore{}

@@ -1,4 +1,4 @@
-module github.com/ajnavarro/super-blockstorage
+module github.com/ajnavarro/super-blockstore
 
 go 1.19
 

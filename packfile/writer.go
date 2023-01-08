@@ -6,7 +6,7 @@ import (
 	"io"
 	"sync"
 
-	ihash "github.com/ajnavarro/super-blockstorage/hash"
+	ihash "github.com/ajnavarro/super-blockstore/hash"
 	"github.com/klauspost/compress/s2"
 )
 
