@@ -149,7 +149,7 @@ func (ds *Datastore) Get(ctx context.Context, key datastore.Key) (value []byte, 
 
 	ds.cache.Add(k, val)
 
-	return val, err
+	return val, nil
 }
 
 // Has returns whether the `key` is mapped to a `value`.

@@ -7,11 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/google/uuid"
+	lru "github.com/hashicorp/golang-lru/v2"
+
 	ihash "github.com/ajnavarro/super-blockstore/hash"
 	"github.com/ajnavarro/super-blockstore/idx"
 	"github.com/ajnavarro/super-blockstore/iio"
-	"github.com/google/uuid"
-	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 var ErrEntryNotFound = errors.New("entry not found")
@@ -63,7 +64,6 @@ func NewPackPack(path, tempPath string, openedPacks int) (*PackPack, error) {
 // TODO GetHashes
 
 func (pp *PackPack) GetSize(key []byte) (uint32, error) {
-
 	size, err := pp.idx.GetSize(ihash.SumBytes(key))
 	if err != nil {
 		return 0, err
@@ -80,7 +80,7 @@ func (pp *PackPack) GetSize(key []byte) (uint32, error) {
 func (pp *PackPack) Get(key []byte) ([]byte, error) {
 	// TODO handle error not found
 	packName, offset, err := pp.idx.GetOffset(ihash.SumBytes(key))
-	if err == os.ErrNotExist {
+	if errors.Is(err, idx.ErrEntryNotFound) {
 		return nil, ErrEntryNotFound
 	}
 
@@ -100,7 +100,7 @@ func (pp *PackPack) Get(key []byte) ([]byte, error) {
 func (pp *PackPack) Has(key []byte) (bool, error) {
 	// TODO handle error not found
 	_, _, err := pp.idx.GetOffset(ihash.SumBytes(key))
-	if err == os.ErrNotExist {
+	if errors.Is(err, idx.ErrEntryNotFound) {
 		return false, ErrEntryNotFound
 	}
 

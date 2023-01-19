@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/cockroachdb/pebble"
+	"github.com/iand/gonubs"
+	"github.com/iand/gonudb"
 	"github.com/ipfs/go-datastore"
-	badger3 "github.com/ipfs/go-ds-badger3"
 	pebbleds "github.com/ipfs/go-ds-pebble"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,6 +33,9 @@ func TestWriteAndReadSingleBlock(t *testing.T) {
 	bval := []byte("test")
 
 	err = ds.Put(ctx, key, bval)
+	require.NoError(err)
+
+	err = ds.Sync(ctx, datastore.NewKey("blah"))
 	require.NoError(err)
 
 	val, err := ds.Get(ctx, key)
@@ -78,21 +81,25 @@ func TestWriteBatch(t *testing.T) {
 	require.NoError(err)
 	require.Equal(string(bval), string(val))
 
-}
+	_, err = ds.Get(ctx, datastore.NewKey("non-existing"))
+	require.Error(err)
+	require.Equal(datastore.ErrNotFound, err)
 
-type datastoreInterface interface {
-	datastore.Datastore
-	datastore.Batching
 }
 
 var datastores = []struct {
 	Name        string
-	GetInstance func(path string) (datastoreInterface, error)
+	GetInstance func(path string) (datastore.Batching, error)
 }{
-
+	{
+		Name: "gonudb",
+		GetInstance: func(path string) (datastore.Batching, error) {
+			return gonubs.NewDatastore(path, "gonudb-bench", &gonudb.StoreOptions{})
+		},
+	},
 	{
 		Name: "superBlockstore",
-		GetInstance: func(path string) (datastoreInterface, error) {
+		GetInstance: func(path string) (datastore.Batching, error) {
 			return NewDatastore(&DatastoreConfig{
 				Folder:                path,
 				BlockCacheNumElements: 1000,
@@ -102,49 +109,50 @@ var datastores = []struct {
 	},
 	{
 		Name: "pebble",
-		GetInstance: func(path string) (datastoreInterface, error) {
+		GetInstance: func(path string) (datastore.Batching, error) {
 			return pebbleds.NewDatastore(path, &pebble.Options{})
 		},
 	},
+
 	// {
 	// 	Name: "leveldb",
-	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 	GetInstance: func(path string) (datastore.Batching, error) {
 	// 		return leveldb.NewDatastore(path, nil)
 	// 	},
 	// },
 
 	// {
 	// 	Name: "flatfs",
-	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 	GetInstance: func(path string) (datastore.Batching, error) {
 	// 		return flatfs.CreateOrOpen(path, flatfs.Suffix(2), true)
 	// 	},
 	// },
 	// {
 	// 	Name: "badger3",
-	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 	GetInstance: func(path string) (datastore.Batching, error) {
 	// 		return badger3.NewDatastore(path, &badger3.DefaultOptions)
 	// 	},
 	// },
 	// {
 	// 	Name: "badger2",
-	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 	GetInstance: func(path string) (datastore.Batching, error) {
 	// 		return badger2.NewDatastore(path, &badger2.DefaultOptions)
 	// 	},
 	// },
 	// {
 	// 	Name: "badger1",
-	// 	GetInstance: func(path string) (datastoreInterface, error) {
+	// 	GetInstance: func(path string) (datastore.Batching, error) {
 	// 		return badger.NewDatastore(path, &badger.DefaultOptions)
 	// 	},
 	// },
-	{
-		Name: "badger3-with-value-threshold-1KB",
-		GetInstance: func(path string) (datastoreInterface, error) {
-			opts := &badger3.DefaultOptions
-			opts.ValueThreshold = 1024
-			return badger3.NewDatastore(path, opts)
-		},
-	},
+	// {
+	// 	Name: "badger3-with-value-threshold-1KB",
+	// 	GetInstance: func(path string) (datastore.Batching, error) {
+	// 		opts := &badger3.DefaultOptions
+	// 		opts.ValueThreshold = 1024
+	// 		return badger3.NewDatastore(path, opts)
+	// 	},
+	// },
 }
 
 func genRandomBytes(len int) []byte {
@@ -167,7 +175,9 @@ func randKey(n int) string {
 	return string(b)
 }
 
-var numElementsPerBatch = []int{100, 1000, 10000, 100000, 1000000, 10000000, 100000000}
+// var numElementsPerBatch = []int{100, 1000, 10000, 100000, 1000000, 10000000, 100000000}
+var numElementsPerBatch = []int{100, 1000, 10000, 100000}
+
 var block = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}
 var biggerBlock = genRandomBytes(262144)
 

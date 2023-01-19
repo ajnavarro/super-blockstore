@@ -1,0 +1,258 @@
+goos: linux
+goarch: amd64
+pkg: github.com/ajnavarro/super-blockstore
+cpu: 11th Gen Intel(R) Core(TM) i7-1195G7 @ 2.90GHz
+BenchmarkCompareDatastores/DS=gonudb/P=10/ACTION=WriteOnBatch-8         	  306937	     81264 ns/op	     440 B/op	       5 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/ACTION=Write-8                	 1000000	     69231 ns/op	     359 B/op	       5 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=DiskUsage-8      	 3609436	       326.0 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=1-8  	    6349	    222457 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=2-8  	    4972	    238466 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=3-8  	    4666	    219192 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=1-8     	    5227	    225616 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=2-8     	    6058	    228812 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=3-8     	    5402	    231873 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=NonExistingKey/ITER=1-8             	 1660278	       710.6 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=NonExistingKey/ITER=2-8             	 1732400	       717.2 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100/ACTION=NonExistingKey/ITER=3-8             	 1672148	       701.5 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=DiskUsage-8                        	 3651776	       323.0 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=1-8 	    6279	    222433 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=2-8 	    5575	    223749 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=3-8 	    6232	    230135 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=1-8    	    6176	    230033 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=2-8    	    6133	    226596 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=3-8    	    4821	    224575 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=NonExistingKey/ITER=1-8            	 1632031	       716.7 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=NonExistingKey/ITER=2-8            	 1659656	       710.4 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=1000/ACTION=NonExistingKey/ITER=3-8            	 1678126	       712.5 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=DiskUsage-8                       	 3744336	       328.5 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=1-8         	    6228	    243447 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=2-8         	    4906	    233611 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=3-8         	    5265	    235863 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=1-8            	    6175	    230792 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=2-8            	    5205	    230530 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=3-8            	    4268	    236228 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=NonExistingKey/ITER=1-8                    	 1611740	       742.8 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=NonExistingKey/ITER=2-8                    	 1598977	       763.6 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=10000/ACTION=NonExistingKey/ITER=3-8                    	 1584067	       754.7 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=DiskUsage-8                               	 3686034	       324.6 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=1-8        	    6186	    197669 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=2-8        	    5466	    203585 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=3-8        	    5998	    194266 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=1-8           	    5984	    204210 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=2-8           	    6212	    201499 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=3-8           	    6177	    205682 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=NonExistingKey/ITER=1-8                   	 1798887	       673.7 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=NonExistingKey/ITER=2-8                   	 1808902	       669.9 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=10/N=100000/ACTION=NonExistingKey/ITER=3-8                   	 1789233	       671.2 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/ACTION=WriteOnBatch-8                                 	  314217	     82140 ns/op	     434 B/op	       5 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/ACTION=Write-8                                        	  955087	     72657 ns/op	     362 B/op	       5 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=DiskUsage-8                              	 3722209	       325.8 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=1-8       	    6381	    218927 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=2-8       	    6039	    240901 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=3-8       	    5074	    217245 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=1-8          	    4938	    219870 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=2-8          	    5356	    220850 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=3-8          	    6140	    236271 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=NonExistingKey/ITER=1-8                  	 1707260	       741.5 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=NonExistingKey/ITER=2-8                  	 1749276	       763.4 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100/ACTION=NonExistingKey/ITER=3-8                  	 1678489	       695.4 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=DiskUsage-8                             	 3633981	       327.8 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=1-8      	    6290	    239397 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=2-8      	    5098	    227180 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=3-8      	    5437	    225446 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=1-8         	    6105	    222365 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=2-8         	    6502	    205596 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=3-8         	    6280	    217233 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=NonExistingKey/ITER=1-8                 	 1715806	       741.2 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=NonExistingKey/ITER=2-8                 	 1518068	       981.1 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=1000/ACTION=NonExistingKey/ITER=3-8                 	 1480652	       698.9 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=DiskUsage-8                            	 3610484	       338.5 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=1-8     	    6057	    225423 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=2-8     	    4958	    227786 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=3-8     	    5998	    253943 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=1-8        	    5374	    233561 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=2-8        	    4735	    224124 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=3-8        	    5744	    223178 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=NonExistingKey/ITER=1-8                	 1598331	       735.9 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=NonExistingKey/ITER=2-8                	 1630824	       737.0 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=10000/ACTION=NonExistingKey/ITER=3-8                	 1667746	       737.1 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=DiskUsage-8                           	 3616591	       328.9 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=1-8    	    5919	    209604 ns/op	  105600 B/op	     910 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=2-8    	    4981	    213268 ns/op	  105600 B/op	     910 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=3-8    	    5842	    208885 ns/op	  105600 B/op	     910 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=1-8       	    6231	    200993 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=2-8       	    6048	    197558 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=3-8       	    5618	    191490 ns/op	   84800 B/op	     900 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=NonExistingKey/ITER=1-8               	 1819682	       669.8 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=NonExistingKey/ITER=2-8               	 1807639	       666.2 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=gonudb/P=262144/N=100000/ACTION=NonExistingKey/ITER=3-8               	 1803268	       655.7 ns/op	     160 B/op	       4 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/ACTION=WriteOnBatch-8                            	  570379	      2249 ns/op	     621 B/op	       9 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/ACTION=Write-8                                   	  811704	      1675 ns/op	     378 B/op	       5 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=DiskUsage-8                         	   62748	     20359 ns/op	      9099 disk	    6796 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=1-8  	   14094	     84327 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=2-8  	   14065	     84377 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=3-8  	   14097	     84836 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=1-8     	   14181	     84285 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=2-8     	   14174	     85020 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=3-8     	   14154	     84642 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=NonExistingKey/ITER=1-8             	    6978	    165748 ns/op	   35162 B/op	     881 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=NonExistingKey/ITER=2-8             	    6884	    165058 ns/op	   35162 B/op	     881 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100/ACTION=NonExistingKey/ITER=3-8             	    6822	    165236 ns/op	   35162 B/op	     881 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=DiskUsage-8                        	   61958	     20385 ns/op	     81079 disk	    6796 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=1-8 	   14120	     84923 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=2-8 	   14206	     84107 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=3-8 	   14148	     83663 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=1-8    	   14142	     84520 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=2-8    	   14073	     85241 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=3-8    	   14150	     84653 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=NonExistingKey/ITER=1-8            	    3122	    354715 ns/op	  100597 B/op	    1581 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=NonExistingKey/ITER=2-8            	    3194	    354762 ns/op	  100598 B/op	    1581 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=1000/ACTION=NonExistingKey/ITER=3-8            	    3207	    355568 ns/op	  100597 B/op	    1581 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=DiskUsage-8                       	   61020	     20229 ns/op	    800853 disk	    6794 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=1-8         	   14106	     84871 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=2-8         	   14230	     83863 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=3-8         	   13968	     84367 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=1-8            	   13969	     84862 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=2-8            	   14040	     84999 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=3-8            	   14005	     84303 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=NonExistingKey/ITER=1-8                    	    2598	    419091 ns/op	  513848 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=NonExistingKey/ITER=2-8                    	    2680	    417961 ns/op	  513848 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=10000/ACTION=NonExistingKey/ITER=3-8                    	    2684	    417794 ns/op	  513848 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=DiskUsage-8                               	   61516	     20309 ns/op	   7998588 disk	    6794 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=1-8        	   13923	     83784 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=2-8        	   14119	     84626 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=3-8        	   14119	     84598 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=1-8           	   14038	     84666 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=2-8           	   14070	     84661 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=3-8           	   14097	     84895 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=NonExistingKey/ITER=1-8                   	    1041	   1085546 ns/op	 4709860 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=NonExistingKey/ITER=2-8                   	    1082	   1085558 ns/op	 4709856 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=10/N=100000/ACTION=NonExistingKey/ITER=3-8                   	     999	   1111290 ns/op	 4709861 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/ACTION=WriteOnBatch-8                                 	  616087	      2245 ns/op	     632 B/op	       9 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/ACTION=Write-8                                        	  810988	      1807 ns/op	     368 B/op	       5 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=DiskUsage-8                              	   60057	     20381 ns/op	      9100 disk	    6793 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=1-8       	   13953	     84465 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=2-8       	   14079	     83803 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=3-8       	   14170	     83978 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=1-8          	   14053	     85363 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=2-8          	   13825	     84174 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=3-8          	   14108	     84342 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=NonExistingKey/ITER=1-8                  	    6890	    171240 ns/op	   35120 B/op	     897 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=NonExistingKey/ITER=2-8                  	    6782	    171232 ns/op	   35121 B/op	     897 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100/ACTION=NonExistingKey/ITER=3-8                  	    6836	    171096 ns/op	   35120 B/op	     897 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=DiskUsage-8                             	   61339	     20414 ns/op	     81085 disk	    6793 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=1-8      	   13857	     86403 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=2-8      	   13825	     85317 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=3-8      	   13772	     85216 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=1-8         	   13803	     85590 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=2-8         	   13783	     86929 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=3-8         	   13773	     85671 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=NonExistingKey/ITER=1-8                 	    3345	    356224 ns/op	  100810 B/op	    1581 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=NonExistingKey/ITER=2-8                 	    3312	    355753 ns/op	  100810 B/op	    1581 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=1000/ACTION=NonExistingKey/ITER=3-8                 	    3319	    357152 ns/op	  100810 B/op	    1581 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=DiskUsage-8                            	   59773	     20008 ns/op	    800846 disk	    6792 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=1-8     	   13906	     84931 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=2-8     	   14042	     84774 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=3-8     	   13897	     85471 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=1-8        	   14046	     84527 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=2-8        	   14072	     84913 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=3-8        	   14053	     84598 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=NonExistingKey/ITER=1-8                	    2590	    418117 ns/op	  513357 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=NonExistingKey/ITER=2-8                	    2524	    415304 ns/op	  513357 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=10000/ACTION=NonExistingKey/ITER=3-8                	    2662	    416620 ns/op	  513358 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=DiskUsage-8                           	   57398	     20099 ns/op	   7998556 disk	    6793 B/op	      87 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=1-8    	   13988	     84712 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=2-8    	   13995	     84981 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=3-8    	   13926	     84820 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=1-8       	   13974	     85028 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=2-8       	   13930	     85014 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=3-8       	   13915	     85621 ns/op	    9600 B/op	     300 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=NonExistingKey/ITER=1-8               	    1071	   1049145 ns/op	 4711335 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=NonExistingKey/ITER=2-8               	    1004	   1022131 ns/op	 4711336 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=superBlockstore/P=262144/N=100000/ACTION=NonExistingKey/ITER=3-8               	    1101	   1076486 ns/op	 4711342 B/op	    1589 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/ACTION=WriteOnBatch-8                                              	 1000000	      1057 ns/op	     198 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/ACTION=Write-8                                                     	  787448	      1576 ns/op	      69 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=DiskUsage-8                                           	 3627417	       327.5 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=1-8                    	    8066	    150474 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=2-8                    	    7736	    150108 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=Read100EventlyDistributed/ITER=3-8                    	    7491	    150968 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=1-8                       	    7728	    150146 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=2-8                       	    7873	    150357 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=Read100ConsecutiveKeys/ITER=3-8                       	    7873	    149793 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=NonExistingKey/ITER=1-8                               	 1000000	      1110 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=NonExistingKey/ITER=2-8                               	 1000000	      1107 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100/ACTION=NonExistingKey/ITER=3-8                               	 1000000	      1105 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=DiskUsage-8                                          	 3618547	       331.1 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=1-8                   	    7845	    154630 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=2-8                   	    7556	    154960 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=Read100EventlyDistributed/ITER=3-8                   	    7588	    155361 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=1-8                      	    7693	    154753 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=2-8                      	    7620	    156351 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=Read100ConsecutiveKeys/ITER=3-8                      	    7431	    155177 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=NonExistingKey/ITER=1-8                              	  912709	      1261 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=NonExistingKey/ITER=2-8                              	  894276	      1259 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=1000/ACTION=NonExistingKey/ITER=3-8                              	  926112	      1269 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=DiskUsage-8                                         	 3713748	       331.6 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=1-8                  	    7618	    160160 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=2-8                  	    7478	    158116 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=Read100EventlyDistributed/ITER=3-8                  	    7207	    160408 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=1-8                     	    6976	    162323 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=2-8                     	    7051	    160824 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=Read100ConsecutiveKeys/ITER=3-8                     	    7173	    160693 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=NonExistingKey/ITER=1-8                             	  992457	      1157 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=NonExistingKey/ITER=2-8                             	  989164	      1166 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=10000/ACTION=NonExistingKey/ITER=3-8                             	  983002	      1162 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=DiskUsage-8                                        	 3618598	       327.9 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=1-8                 	    6580	    180375 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=2-8                 	    6163	    178950 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=Read100EventlyDistributed/ITER=3-8                 	    6499	    182608 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=1-8                    	    6247	    182137 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=2-8                    	    6489	    181470 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=Read100ConsecutiveKeys/ITER=3-8                    	    6501	    180023 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=NonExistingKey/ITER=1-8                            	  777832	      1465 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=NonExistingKey/ITER=2-8                            	  806456	      1474 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=10/N=100000/ACTION=NonExistingKey/ITER=3-8                            	  786525	      1455 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/ACTION=WriteOnBatch-8                                          	 1000000	      1092 ns/op	     198 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/ACTION=Write-8                                                 	  749702	      1616 ns/op	      67 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=DiskUsage-8                                       	 3499767	       339.1 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=1-8                	    7837	    154184 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=2-8                	    7922	    153098 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=Read100EventlyDistributed/ITER=3-8                	    7735	    151097 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=1-8                   	    8055	    150916 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=2-8                   	    7810	    150941 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=Read100ConsecutiveKeys/ITER=3-8                   	    7814	    150451 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=NonExistingKey/ITER=1-8                           	 1000000	      1093 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=NonExistingKey/ITER=2-8                           	 1000000	      1100 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100/ACTION=NonExistingKey/ITER=3-8                           	  984068	      1097 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=DiskUsage-8                                      	 3580120	       334.5 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=1-8               	    7843	    155955 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=2-8               	    7291	    155992 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=Read100EventlyDistributed/ITER=3-8               	    7182	    155554 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=1-8                  	    6816	    157323 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=2-8                  	    7452	    157417 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=Read100ConsecutiveKeys/ITER=3-8                  	    6898	    155712 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=NonExistingKey/ITER=1-8                          	  840214	      1316 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=NonExistingKey/ITER=2-8                          	  876948	      1324 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=1000/ACTION=NonExistingKey/ITER=3-8                          	  861666	      1311 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=DiskUsage-8                                     	 3642037	       325.2 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=1-8              	    7524	    160240 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=2-8              	    7195	    159927 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=Read100EventlyDistributed/ITER=3-8              	    7058	    159796 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=1-8                 	    6745	    160901 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=2-8                 	    7042	    160649 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=Read100ConsecutiveKeys/ITER=3-8                 	    7402	    159738 ns/op	   11201 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=NonExistingKey/ITER=1-8                         	  930172	      1251 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=NonExistingKey/ITER=2-8                         	  934860	      1254 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=10000/ACTION=NonExistingKey/ITER=3-8                         	  876604	      1258 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=DiskUsage-8                                    	 3719782	       325.6 ns/op	         0 disk	       0 B/op	       0 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=1-8             	    6622	    182000 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=2-8             	    6520	    180582 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=Read100EventlyDistributed/ITER=3-8             	    6607	    181789 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=1-8                	    6480	    179813 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=2-8                	    6583	    182724 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=Read100ConsecutiveKeys/ITER=3-8                	    6421	    183121 ns/op	   11200 B/op	     400 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=NonExistingKey/ITER=1-8                        	  795600	      1488 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=NonExistingKey/ITER=2-8                        	  772833	      1503 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCompareDatastores/DS=pebble/P=262144/N=100000/ACTION=NonExistingKey/ITER=3-8                        	  759573	      1475 ns/op	      48 B/op	       1 allocs/op
+PASS
+ok  	github.com/ajnavarro/super-blockstore	1480.750s
